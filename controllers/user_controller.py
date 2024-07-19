@@ -1,0 +1,168 @@
+# -*- coding: utf-8 -*-
+from .main import *
+import pdb
+import datetime
+
+_logger = logging.getLogger(__name__)
+
+
+class userREST(http.Controller):
+
+    @http.route('/api/users/<id>', methods=['GET'], type='http', auth='none', cors="*")
+    def api_users_GET(self, id , **kw):
+        if id:
+            user = request.env['res.users'].sudo().search([('id','=',id)])
+            if user:
+                user_data = {
+                    'id': user.id,
+                    'name': user.name,
+                    'email': user.email,
+                    'login': user.login,
+                    'partner_id': user.partner_id.id or None,
+                    'partner_name': user.partner_id.name or None,
+                    'partner_street': user.partner_id.street or None,
+                    'partner_street2': user.partner_id.street2 or None,
+                    'partner_city': user.partner_id.city or None,
+                    'partner_state_id': user.partner_id.state_id.id or None,
+                    'partner_state_name': user.partner_id.state_id.name or None,
+                    'partner_zip': user.partner_id.zip or None,
+                    'partner_country_id': user.partner_id.country_id.id or None,
+                    'partner_country_name': user.partner_id.country_id.name or None,
+                    'partner_vat': user.partner_id.vat or None,
+                    'partner_email': user.partner_id.email or None,
+                    'partner_phone': user.partner_id.phone or None,
+                    'company_id': user.company_id.id or None,
+                    'company_name': user.company_id.name or None,
+                    'company_street': user.company_id.street or None,
+                    'company_street2': user.company_id.street2 or None,
+                    'company_city': user.company_id.city or None,
+                    'company_state_id': user.company_id.state_id.id or None,
+                    'company_state_name': user.company_id.state_id.name or None,
+                    'company_zip': user.company_id.zip or None,
+                    'company_country_id': user.company_id.country_id.id or None,
+                    'company_country_name': user.company_id.country_id.name or None,
+                    'company_vat': user.company_id.vat or None,
+                    'company_email': user.company_id.email or None,
+                    'company_phone': user.company_id.phone or None
+                }
+
+                resp = werkzeug.wrappers.Response(
+                    status=200,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                    response=json.dumps(user_data)
+                )
+                return resp
+            return  werkzeug.wrappers.Response(
+                status=404,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps("Utilisateur non trouvée")
+            )
+        return  werkzeug.wrappers.Response(
+            status=400,
+            content_type='application/json; charset=utf-8',
+            headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            response=json.dumps("user_id est obligatoire")
+        )
+
+
+    @http.route('/api/users', methods=['POST'], type='http', auth='none', cors='*', csrf=False)
+    def api_users_POST(self, **kw):
+        data = json.loads(request.httprequest.data)
+        name = data.get('name')
+        email = data.get('email')
+        password = data.get('password')
+        # company_name = data.get('company_name')
+        city = data.get('city')
+        phone = data.get('phone')
+
+        if data:
+            # Retrouver le currency XOF
+            # currency = request.env['res.currency'].sudo().search([('name', '=', 'XOF')], limit=1)
+
+            # Vérifier si le company existe déjà
+            # company = request.env['res.company'].sudo().search([('name', '=', 'Client CCBM')], limit=1)
+            # company = request.env['res.company'].sudo().search([('id', '=', 4)], limit=1)
+            company = request.env['res.company'].sudo().search([('id', '=', 1)], limit=1)
+            country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
+            # if not company:
+            #     company = request.env['res.company'].sudo().create({
+            #         'name': company_name,
+            #         'currency_id': currency.id,
+            #         'layout_background' : 'Blank'
+            #     })
+
+            # Création du partenaire
+            partner = request.env['res.partner'].sudo().create({
+                'name': name,
+                'email': email,
+                'customer_rank': 1,
+                'company_id': company.id,
+                'city': city,
+                'phone': phone,
+                'is_company': False,
+                'active' : True,
+                'type': 'contact',
+                'company_name': company.name,
+                'country_id': country.id or None,
+            })
+
+            # Vérifier si l'utilisateur existe déjà
+            user = request.env['res.users'].sudo().search([('login', '=', email)], limit=1)
+            if not user:
+                # Création de l'utilisateur
+                user = request.env['res.users'].sudo().create({
+                    'login': email,
+                    'password': password,
+                    'partner_id': partner.id,
+                    'active': True,
+                    'karma': 0,
+                    'notification_type': 'email',
+                    'company_id': partner.company_id.id,
+                    'company_ids': [partner.company_id.id],
+                    'create_uid': 1
+                })
+
+                if user:
+                    partner.write({
+                        'user_id': user.id
+                    })
+                    resp = werkzeug.wrappers.Response(
+                        status=201,
+                        content_type='application/json; charset=utf-8',
+                        headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                        response=json.dumps({
+                            'id': user.id,
+                            'name': user.name,
+                            'email': user.email,
+                            'partner_id': user.partner_id.id,
+                            'company_id': user.company_id.id,
+                            'company_name': user.company_id.name,
+                            'partner_city': user.partner_id.city,
+                            'partner_phone': user.partner_id.phone,
+                            'country_id': user.partner_id.country_id.id or None,
+                            'country_name': user.partner_id.country_id.name or None,
+                            'country_code': user.partner_id.country_id.code,
+                            'country_phone_code': user.partner_id.country_id.phone_code,
+                        })
+                    )
+                    return resp
+                return werkzeug.wrappers.Response(
+                    status=400,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                    response=json.dumps({'message': 'Erreur lors de la création de l\'utilisateur'})
+                )
+            return werkzeug.wrappers.Response(
+                status=400,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps({'message': 'L\'utilisateur existe déjà'})
+            )
+        return werkzeug.wrappers.Response(
+            status=400,
+            content_type='application/json; charset=utf-8',
+            headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            response=json.dumps({'message': 'Données invalides'})
+        )
