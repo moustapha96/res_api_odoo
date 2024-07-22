@@ -12,7 +12,7 @@ class ControllerREST(http.Controller):
             return werkzeug.wrappers.Response(
                 status = 204,
                 headers = [
-                    ('Access-Control-Allow-Origin', '*'),
+                    ('Access-Control-Allow-Origin', 'http://orbitcity.sn/'),
                     ('Access-Control-Allow-Headers', '*'),
                     ('Access-Control-Allow-Methods', '*'),
                 ]
