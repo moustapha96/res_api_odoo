@@ -36,7 +36,7 @@
 
         <record id="rest_api_cors_parameter_value_in_all_routes" model="ir.config_parameter">
             <field name="key">rest_api.cors_parameter_value_in_all_routes</field>
-            <field name="value">null</field>
+            <field name="value">*</field>
         </record>
         <record id="rest_api_u_escape_characters_for_unicode_in_responses" model="ir.config_parameter">
             <field name="key">rest_api.u_escape_characters_for_unicode_in_responses</field>
