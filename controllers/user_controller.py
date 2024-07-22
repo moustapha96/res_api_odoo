@@ -117,7 +117,7 @@ class userREST(http.Controller):
                     'password': password,
                     'partner_id': partner.id,
                     'active': True,
-                    'karma': 0,
+                    # 'karma': 0,
                     'notification_type': 'email',
                     'company_id': partner.company_id.id,
                     'company_ids': [partner.company_id.id],
