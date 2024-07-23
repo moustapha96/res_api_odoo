@@ -98,7 +98,7 @@ class userREST(http.Controller):
             user_email = request.env['res.users'].sudo().search([('login', '=', email)], limit=1)
             if partner_email or user_email:
                 return werkzeug.wrappers.Response(
-                    status=408,
+                    status=409,
                     content_type='application/json; charset=utf-8',
                     headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
                     response=json.dumps("Utilisateur avec cet adresse mail existe déjà")
@@ -186,7 +186,6 @@ class userREST(http.Controller):
     def api_users_compte(self, id):
         partner = request.env['res.partner'].sudo().search( [ ('id', '=' , id)] , limit=1)
         order_obj = request.env['sale.order']
-        
         if partner:
            
             # Compter les commandes de type "order"
@@ -202,7 +201,7 @@ class userREST(http.Controller):
             progress_count = order_obj.sudo().search_count([('partner_id.id', '=', partner.id), ('state', 'in', ['progress', 'manual_progress']), ('type_sale', 'in', ['order', 'preorder'])])
            
             return http.Response(json.dumps({
-                  'user_name': partner.name,
+                'user_name': partner.name,
                 'order_count': order_count,
                 'preorder_count': preorder_count,
                 'delivered_count': delivered_count,
@@ -212,3 +211,83 @@ class userREST(http.Controller):
             return http.Response(json.dumps({
                 'message': 'Utilisateur introuvable'
             }), content_type='application/json')
+        
+
+    @http.route('/api/users/<int:id>/update', methods=['PUT'], type='http', auth='none', cors='*', csrf=False)
+    def api_users_POST(self, id, **kw):
+        data = json.loads(request.httprequest.data)
+        name = data.get('name')
+        email = data.get('email')
+        city = data.get('city')
+        phone = data.get('phone')
+
+        if data:
+            country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
+            # partner_email = request.env['res.partner'].sudo().search([('email', '=', email), ('id', '!=', id)], limit=1)
+            # user_email = request.env['res.users'].sudo().search([('login', '=', email), ('partner_id', '!=', id)], limit=1)
+            # if partner_email or user_email:
+            #     return werkzeug.wrappers.Response(
+            #         status=409,
+            #         content_type='application/json; charset=utf-8',
+            #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            #         response=json.dumps("Utilisateur avec cet adresse mail existe déjà")
+            #     )
+            partner_phone = request.env['res.partner'].sudo().search([('phone', '=', phone), ('id', '!=', id)], limit=1)
+            partner = request.env['res.partner'].sudo().search([ ('id', '=', id)], limit=1)
+
+            # if partner_phone and phone != partner.phone:
+            #     return werkzeug.wrappers.Response(
+            #         status=409,
+            #         content_type='application/json; charset=utf-8',
+            #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            #         response=json.dumps("Un autre partenaire avec ce numéro de téléphone existe déjà")
+            #     )
+
+            if partner and partner_phone.phone != phone:
+                partner.write({
+                    'name': name,
+                    # 'email': email,
+                    'city': city,
+                    'phone': phone,
+                    'country_id': country.id or None,
+                })
+                # Mise à jour de l'utilisateur associé au partenaire
+                user = request.env['res.users'].sudo().search([('partner_id', '=', partner.id)], limit=1)
+                if user:
+                    user.write({
+                        'name': name,
+                        # 'login': email,
+                    })
+
+                resp = werkzeug.wrappers.Response(
+                    status=200,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                    response=json.dumps({
+                        'id': user.id,
+                        'name': partner.name,
+                        'email': partner.email,
+                        'partner_id': partner.id,
+                        'company_id': partner.company_id.id,
+                        'company_name': user.company_id.name,
+                        'partner_city': partner.city,
+                        'partner_phone': partner.phone,
+                        'country_id': partner.country_id.id or None,
+                        'country_name': partner.country_id.name or None,
+                        'country_code': partner.country_id.code,
+                        'country_phone_code': partner.country_id.phone_code,
+                    })
+                )
+                return resp
+            return werkzeug.wrappers.Response(
+                status=404,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps({'message': "L'utilisateur n'existe pas"})
+            )
+        return werkzeug.wrappers.Response(
+            status=400,
+            content_type='application/json; charset=utf-8',
+            headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            response=json.dumps({'message': 'Données invalides'})
+        )
