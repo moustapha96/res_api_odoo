@@ -217,7 +217,7 @@ class userREST(http.Controller):
     def api_users_POST(self, id, **kw):
         data = json.loads(request.httprequest.data)
         name = data.get('name')
-        email = data.get('email')
+    
         city = data.get('city')
         phone = data.get('phone')
 
