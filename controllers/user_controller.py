@@ -76,12 +76,6 @@ class userREST(http.Controller):
         # company_name = data.get('company_name')
         city = data.get('city')
         phone = data.get('phone')
-
-        critere = []
-        if name:
-            critere += [( 'email' , '=' , email )]
-        if phone:
-            critere += [( 'phone' , '=' , phone )]
         
         if data:
             # Retrouver le currency XOF
@@ -104,7 +98,7 @@ class userREST(http.Controller):
             user_email = request.env['res.users'].sudo().search([('login', '=', email)], limit=1)
             if partner_email or user_email:
                 return werkzeug.wrappers.Response(
-                    status=409,
+                    status=408,
                     content_type='application/json; charset=utf-8',
                     headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
                     response=json.dumps("Utilisateur avec cet adresse mail existe déjà")
