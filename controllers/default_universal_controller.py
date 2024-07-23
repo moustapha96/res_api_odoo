@@ -232,6 +232,96 @@ class ControllerREST(http.Controller):
             headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
             response=json.dumps("pas de données")  )
 
+    @http.route('/api/produits/flash',   methods=['GET'],  type='http', auth='none' , cors="*")
+    def api_flash_produits_get(self, **kw):
+        products = request.env['product.product'].sudo().search([ ('sale_ok', '=', True), ('active', '=', True)])
+        product_data = []
+        if products:
+            for p in products:
+                product_data.append({
+                'id': p.id,
+                'name': p.name,
+                'display_name': p.display_name,
+                'quantite_en_stock': p.qty_available,
+                'quantity_reception':p.incoming_qty,
+                'quanitty_virtuelle_disponible': p.free_qty,
+                'quanitty_commande': p.outgoing_qty,
+                'quanitty_prevu': p.virtual_available,
+                'image_1920': p.image_1920,
+                'image_128' : p.image_128,
+                'image_1024': p.image_1024,
+                'image_512': p.image_512,
+                'image_256': p.image_256,
+                'categ_id': p.categ_id.name,
+                'type': p.type,
+                'description': p.description,
+                'list_price': p.list_price,
+                'volume': p.volume,
+                'weight': p.weight,
+                'sale_ok': p.sale_ok,
+                'standard_price': p.standard_price,
+                'active': p.active,
+            })
+        resp = werkzeug.wrappers.Response(
+                status=200,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps(product_data)
+            )
+        return resp
+
+
+
+    @http.route('/api/produits/last', methods=['GET'], type='http', auth='none', cors="*")
+    def api__products_GET_LAST(self, **kw):
+        product_obj = request.env['product.product']  # Objet product.product
+       
+       # Rechercher les derniers produits créés
+        last_products = product_obj.sudo().search_read([], [], order='create_date desc', limit=10)
+        
+        product_data = []
+        if last_products:
+            for p in last_products:
+
+                product_data.append({
+                    'id': p.id,
+                    'name': p.name,
+                    'display_name': p.display_name,
+                    'quantite_en_stock': p.qty_available,
+                    'quantity_reception':p.incoming_qty,
+                    'quanitty_virtuelle_disponible': p.free_qty,
+                    'quanitty_commande': p.outgoing_qty,
+                    'quanitty_prevu': p.virtual_available,
+                    'image_1920': p.image_1920,
+                    'image_128' : p.image_128,
+                    'image_1024': p.image_1024,
+                    'image_512': p.image_512,
+                    'image_256': p.image_256,
+                    'categ_id': p.categ_id.name,
+                    'type': p.type,
+                    'description': p.description,
+                    'list_price': p.list_price,
+                    'volume': p.volume,
+                    'weight': p.weight,
+                    'sale_ok': p.sale_ok,
+                    'standard_price': p.standard_price,
+                    'active': p.active,
+                })
+
+            resp = werkzeug.wrappers.Response(
+                status=200,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps(product_data)
+            )
+            return resp
+        return  werkzeug.wrappers.Response(
+            status=200,
+            content_type='application/json; charset=utf-8',
+            headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            response=json.dumps("pas de données")  )
+
+
 
     # Reccuperer la liste des stats
     @http.route('/api/state', methods=['GET'], type='http', auth='none', cors='*' )

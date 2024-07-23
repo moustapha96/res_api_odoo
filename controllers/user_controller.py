@@ -77,6 +77,12 @@ class userREST(http.Controller):
         city = data.get('city')
         phone = data.get('phone')
 
+        critere = []
+        if name:
+            critere += [( 'email' , '=' , email )]
+        if phone:
+            critere += [( 'phone' , '=' , phone )]
+        
         if data:
             # Retrouver le currency XOF
             # currency = request.env['res.currency'].sudo().search([('name', '=', 'XOF')], limit=1)
@@ -94,23 +100,38 @@ class userREST(http.Controller):
             #     })
 
             # Création du partenaire
-            partner = request.env['res.partner'].sudo().create({
-                'name': name,
-                'email': email,
-                'customer_rank': 1,
-                'company_id': company.id,
-                'city': city,
-                'phone': phone,
-                'is_company': False,
-                'active' : True,
-                'type': 'contact',
-                'company_name': company.name,
-                'country_id': country.id or None,
-            })
+            partner_email = request.env['res.partner'].sudo().search([('email', '=', email)], limit=1)
+            user_email = request.env['res.users'].sudo().search([('login', '=', email)], limit=1)
+            if partner_email or user_email:
+                return werkzeug.wrappers.Response(
+                    status=409,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                    response=json.dumps("Utilisateur avec cet adresse mail existe déjà")
+                )
+            partner_phone =  request.env['res.partner'].sudo().search([('phone', '=', phone)], limit=1)
 
-            # Vérifier si l'utilisateur existe déjà
-            user = request.env['res.users'].sudo().search([('login', '=', email)], limit=1)
-            if not user:
+            if partner_phone :
+                return werkzeug.wrappers.Response(
+                    status=409,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                    response=json.dumps("Utilisateur avec ce numero téléphone existe déjà")
+                )
+            if not partner_email and not user_email:
+                partner = request.env['res.partner'].sudo().create({
+                    'name': name,
+                    'email': email,
+                    'customer_rank': 1,
+                    'company_id': company.id,
+                    'city': city,
+                    'phone': phone,
+                    'is_company': False,
+                    'active' : True,
+                    'type': 'contact',
+                    'company_name': company.name,
+                    'country_id': country.id or None,
+                })
                 # Création de l'utilisateur
                 user = request.env['res.users'].sudo().create({
                     'login': email,
@@ -152,7 +173,7 @@ class userREST(http.Controller):
                     status=400,
                     content_type='application/json; charset=utf-8',
                     headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                    response=json.dumps({'message': 'Erreur lors de la création de l\'utilisateur'})
+                    response=json.dumps({'message': "Erreur lors de la création de l'utilisateur"})
                 )
             return werkzeug.wrappers.Response(
                 status=400,
@@ -166,3 +187,34 @@ class userREST(http.Controller):
             headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
             response=json.dumps({'message': 'Données invalides'})
         )
+
+    @http.route('/api/users/<id>/compte', methods=['GET'], type='http', auth='none', cors = '*' , csrf=False)
+    def api_users_compte(self, id):
+        partner = request.env['res.partner'].sudo().search( [ ('id', '=' , id)] , limit=1)
+        order_obj = request.env['sale.order']
+        
+        if partner:
+           
+            # Compter les commandes de type "order"
+            order_count = order_obj.sudo().search_count([('partner_id.id', '=', partner.id), ('state', 'not in', ['cancel', 'draft']), ('type_sale', '=', 'order')])
+
+            # Compter les commandes de type "preorder"
+            preorder_count = order_obj.sudo().search_count([('partner_id.id', '=', partner.id), ('state', 'not in', ['cancel', 'draft']), ('type_sale', '=', 'preorder')])
+
+            # Compter les commandes livrées
+            delivered_count = order_obj.sudo().search_count([('partner_id.id', '=', partner.id), ('state', '=', 'done')])
+
+            # Compter les commandes en cours
+            progress_count = order_obj.sudo().search_count([('partner_id.id', '=', partner.id), ('state', 'in', ['progress', 'manual_progress']), ('type_sale', 'in', ['order', 'preorder'])])
+           
+            return http.Response(json.dumps({
+                  'user_name': partner.name,
+                'order_count': order_count,
+                'preorder_count': preorder_count,
+                'delivered_count': delivered_count,
+                'progress_count': progress_count,
+            }), content_type='application/json')
+        else:
+            return http.Response(json.dumps({
+                'message': 'Utilisateur introuvable'
+            }), content_type='application/json')
