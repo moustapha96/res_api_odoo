@@ -332,14 +332,20 @@ class CommandeREST(http.Controller):
         )
 
 
-    @http.route('/api/commandes_search', methods=['POST'], type='http', auth='none', cors="*" , csrf=False)
+    @http.route('/api/tracking', methods=['POST'] , type='http', auth='none' , cors="*" , csrf=False )
     def api_orders_trackink_GET(self , **kw):
         data = json.loads(request.httprequest.data)
         email = data['email']
         name = data['name']
         date = data.get('date')
-       
 
+        if email is None or name is None:
+            return werkzeug.wrappers.Response(
+                status=400,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps("Missing email or name")
+            )
         partner = request.env['res.partner'].sudo().search([ ( 'email', '=', email ) ] , limit=1)
         if not partner:
             return  werkzeug.wrappers.Response(
