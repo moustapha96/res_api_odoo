@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Odoo REST API',
+    'name': 'Odoo REST API vps',
     'version': '16.0.1.14.8',
     'category': 'Extra Tools',
     'author': "AVS'",

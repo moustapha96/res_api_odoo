@@ -17,3 +17,4 @@ class ControllerREST(http.Controller):
                     ('Access-Control-Allow-Methods', '*'),
                 ]
             )
+   

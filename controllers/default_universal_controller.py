@@ -272,54 +272,54 @@ class ControllerREST(http.Controller):
 
 
 
-    @http.route('/api/produits/last', methods=['GET'], type='http', auth='none', cors="*")
-    def api__products_GET_LAST(self, **kw):
-        product_obj = request.env['product.product']  # Objet product.product
+    # @http.route('/api/produits/last', methods=['GET'], type='http', auth='none', cors="*")
+    # def api__products_GET_LAST(self, **kw):
+    #     product_obj = request.env['product.product']  # Objet product.product
        
-       # Rechercher les derniers produits créés
-        last_products = product_obj.sudo().search_read([], [], order='create_date desc', limit=10)
+    #    # Rechercher les derniers produits créés
+    #     last_products = product_obj.sudo().search_read([], [], order='create_date desc', limit=10)
         
-        product_data = []
-        if last_products:
-            for p in last_products:
+    #     product_data = []
+    #     if last_products:
+    #         for p in last_products:
 
-                product_data.append({
-                    'id': p.id,
-                    'name': p.name,
-                    'display_name': p.display_name,
-                    'quantite_en_stock': p.qty_available,
-                    'quantity_reception':p.incoming_qty,
-                    'quanitty_virtuelle_disponible': p.free_qty,
-                    'quanitty_commande': p.outgoing_qty,
-                    'quanitty_prevu': p.virtual_available,
-                    'image_1920': p.image_1920,
-                    'image_128' : p.image_128,
-                    'image_1024': p.image_1024,
-                    'image_512': p.image_512,
-                    'image_256': p.image_256,
-                    'categ_id': p.categ_id.name,
-                    'type': p.type,
-                    'description': p.description,
-                    'list_price': p.list_price,
-                    'volume': p.volume,
-                    'weight': p.weight,
-                    'sale_ok': p.sale_ok,
-                    'standard_price': p.standard_price,
-                    'active': p.active,
-                })
+    #             product_data.append({
+    #                 'id': p.id,
+    #                 'name': p.name,
+    #                 'display_name': p.display_name,
+    #                 'quantite_en_stock': p.qty_available,
+    #                 'quantity_reception':p.incoming_qty,
+    #                 'quanitty_virtuelle_disponible': p.free_qty,
+    #                 'quanitty_commande': p.outgoing_qty,
+    #                 'quanitty_prevu': p.virtual_available,
+    #                 'image_1920': p.image_1920,
+    #                 'image_128' : p.image_128,
+    #                 'image_1024': p.image_1024,
+    #                 'image_512': p.image_512,
+    #                 'image_256': p.image_256,
+    #                 'categ_id': p.categ_id.name,
+    #                 'type': p.type,
+    #                 'description': p.description,
+    #                 'list_price': p.list_price,
+    #                 'volume': p.volume,
+    #                 'weight': p.weight,
+    #                 'sale_ok': p.sale_ok,
+    #                 'standard_price': p.standard_price,
+    #                 'active': p.active,
+    #             })
 
-            resp = werkzeug.wrappers.Response(
-                status=200,
-                content_type='application/json; charset=utf-8',
-                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                response=json.dumps(product_data)
-            )
-            return resp
-        return  werkzeug.wrappers.Response(
-            status=200,
-            content_type='application/json; charset=utf-8',
-            headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-            response=json.dumps("pas de données")  )
+    #         resp = werkzeug.wrappers.Response(
+    #             status=200,
+    #             content_type='application/json; charset=utf-8',
+    #             headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+    #             response=json.dumps(product_data)
+    #         )
+    #         return resp
+    #     return  werkzeug.wrappers.Response(
+    #         status=200,
+    #         content_type='application/json; charset=utf-8',
+    #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+    #         response=json.dumps("pas de données")  )
 
 
 
@@ -378,4 +378,100 @@ class ControllerREST(http.Controller):
                 content_type='application/json; charset=utf-8',
                 headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
                 response=json.dumps("Erreur lors de la reccuperation des pays"))
+    
 
+    @http.route('/api/new_compte',  methods=['POST'] , type='http', auth='none' , cors="*" , csrf=False )
+    def api_new_compte_post(self, **kw):
+        data = json.loads(request.httprequest.data)
+        if not data:
+            return werkzeug.wrappers.Response(
+                status=400,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps("Données manquantes")
+            )
+
+        name = data.get('name')
+        email = data.get('email')
+        password = data.get('password')
+        # company_name = data.get('company_name')
+        city = data.get('city')
+        phone = data.get('phone')
+
+        company = request.env['res.company'].sudo().search([('id', '=', 1)], limit=1)
+        country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
+
+        partner_email = request.env['res.partner'].sudo().search([('email', '=', email)], limit=1)
+
+        if partner_email :
+            return werkzeug.wrappers.Response(
+                status=400,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps("Utilisateur avec cet adresse mail existe déjà")
+            )
+        partner_phone =  request.env['res.partner'].sudo().search([('phone', '=', phone)], limit=1)
+        if partner_phone :
+            return werkzeug.wrappers.Response(
+                status=400,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps("Utilisateur avec ce numero téléphone existe déjà")
+            )
+        if not partner_email and not partner_phone:
+            partner = request.env['res.partner'].sudo().create({
+                'name': name,
+                'email': email,
+                'customer_rank': 1,
+                'company_id': company.id,
+                'city': city,
+                'phone': phone,
+                'is_company': False,
+                'active' : True,
+                'type': 'contact',
+                'company_name': company.name,
+                'country_id': country.id or None,
+            })
+            if partner:
+                # Création de l'utilisateur
+                user = request.env['res.users'].sudo().create({
+                    'login': email,
+                    'password': password,
+                    'partner_id': partner.id,
+                    'active': True,
+                    # 'karma': 0,
+                    'notification_type': 'email',
+                    'company_id': partner.company_id.id,
+                    'company_ids': [partner.company_id.id],
+                    'create_uid': 1
+                })
+                if user:
+                    partner.write({
+                        'user_id': user.id
+                    })
+                    return werkzeug.wrappers.Response(
+                        status=201,
+                        content_type='application/json; charset=utf-8',
+                        headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                        response=json.dumps({
+                            'id': user.id,
+                            'name': user.name,
+                            'email': user.email,
+                            'partner_id': user.partner_id.id,
+                            'company_id': user.company_id.id,
+                            'company_name': user.company_id.name,
+                            'partner_city': user.partner_id.city,
+                            'partner_phone': user.partner_id.phone,
+                            'country_id': user.partner_id.country_id.id or None,
+                            'country_name': user.partner_id.country_id.name or None,
+                            'country_code': user.partner_id.country_id.code,
+                            'country_phone_code': user.partner_id.country_id.phone_code,
+                        })
+                    )
+
+        return werkzeug.wrappers.Response(
+            status=400,
+            content_type='application/json; charset=utf-8',
+            headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            response=json.dumps(f"Compte client non créer")
+        )

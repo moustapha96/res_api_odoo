@@ -67,7 +67,8 @@ class userREST(http.Controller):
         )
 
 
-    @http.route('/api/users', methods=['POST'], type='http', auth='none', cors='*', csrf=False)
+    @http.route('/api/users', methods=['POST'],auth="public"  , type='http', cors="*", csrf=False)
+    @check_permissions
     def api_users_POST(self, **kw):
         data = json.loads(request.httprequest.data)
         name = data.get('name')
@@ -76,29 +77,19 @@ class userREST(http.Controller):
         # company_name = data.get('company_name')
         city = data.get('city')
         phone = data.get('phone')
-        
-        if data:
-            # Retrouver le currency XOF
-            # currency = request.env['res.currency'].sudo().search([('name', '=', 'XOF')], limit=1)
 
-            # Vérifier si le company existe déjà
-            # company = request.env['res.company'].sudo().search([('name', '=', 'Client CCBM')], limit=1)
-            # company = request.env['res.company'].sudo().search([('id', '=', 4)], limit=1)
+
+        if data:
+           
             company = request.env['res.company'].sudo().search([('id', '=', 1)], limit=1)
             country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
-            # if not company:
-            #     company = request.env['res.company'].sudo().create({
-            #         'name': company_name,
-            #         'currency_id': currency.id,
-            #         'layout_background' : 'Blank'
-            #     })
-
+           
             # Création du partenaire
             partner_email = request.env['res.partner'].sudo().search([('email', '=', email)], limit=1)
             user_email = request.env['res.users'].sudo().search([('login', '=', email)], limit=1)
             if partner_email or user_email:
                 return werkzeug.wrappers.Response(
-                    status=409,
+                    status=400,
                     content_type='application/json; charset=utf-8',
                     headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
                     response=json.dumps("Utilisateur avec cet adresse mail existe déjà")
@@ -182,7 +173,7 @@ class userREST(http.Controller):
             response=json.dumps({'message': 'Données invalides'})
         )
 
-    @http.route('/api/users/<id>/compte', methods=['GET'], type='http', auth='none', cors = '*' , csrf=False)
+    @http.route('/api/users/<id>/compte', methods=['GET'],  type='http', auth='none', cors="*")
     def api_users_compte(self, id):
         partner = request.env['res.partner'].sudo().search( [ ('id', '=' , id)] , limit=1)
         order_obj = request.env['sale.order']
@@ -217,7 +208,7 @@ class userREST(http.Controller):
     def api_users_POST(self, id, **kw):
         data = json.loads(request.httprequest.data)
         name = data.get('name')
-    
+        email = data.get('email')
         city = data.get('city')
         phone = data.get('phone')
 
