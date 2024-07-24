@@ -330,3 +330,107 @@ class CommandeREST(http.Controller):
             headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
             response=json.dumps("Commande non trouvée")
         )
+
+
+    @http.route('/api/commandes_search', methods=['POST'], type='http', auth='none', cors="*" , csrf=False)
+    def api_orders_trackink_GET(self , **kw):
+        data = json.loads(request.httprequest.data)
+        email = data['email']
+        name = data['name']
+        date = data.get('date')
+       
+
+        partner = request.env['res.partner'].sudo().search([ ( 'email', '=', email ) ] , limit=1)
+        if not partner:
+            return  werkzeug.wrappers.Response(
+                status=400,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps("Utilisateur n'existe pas")
+            )
+        if partner :
+            order = request.env['sale.order'].sudo().search([('partner_id','=', partner.id), ('name','=', name)], limit=1)
+            if order:
+                order_data = {
+                'id': order.id,
+                'type_sale':  order.type_sale,
+                'date_order': order.date_order.isoformat() if order.date_order else None,
+                'name': order.name,
+                'partner_id': order.partner_id.id or None,
+                'partner_name': order.partner_id.name or None,
+                'partner_street': order.partner_id.street or None,
+                'partner_street2': order.partner_id.street2 or None,
+                'partner_city': order.partner_id.city or None,
+                'partner_state_id': order.partner_id.state_id.id or None,
+                'partner_state_name': order.partner_id.state_id.name or None,
+                'partner_zip': order.partner_id.zip or None,
+                'partner_country_id': order.partner_id.country_id.id or None,
+                'partner_country_name': order.partner_id.country_id.name or None,
+                'partner_vat': order.partner_id.vat or None,
+                'partner_email': order.partner_id.email or None,
+                'partner_phone': order.partner_id.phone or None,
+                'amount_untaxed': order.amount_untaxed or None,
+                'amount_tax': order.amount_tax or None,
+                'amount_total': order.amount_total or None,
+                'state': order.state or None,
+                'user_id': order.user_id.id or None,
+                'user_name': order.user_id.name or None,
+                'create_date': order.create_date.isoformat() if order.create_date else None,
+                'state': order.state or None,
+                'user_id': order.user_id.id or None,
+                'payment_term_id': order.payment_term_id.id or None,
+                'advance_payment_status':order.advance_payment_status,
+               
+                'commitment_date': order.commitment_date.isoformat() if order.commitment_date else None,
+                'note': order.note or None,
+               
+                'company_id': order.company_id.id,
+               
+                'first_payment_date': order.first_payment_date.isoformat() if order.first_payment_date else None,
+                'second_payment_date': order.second_payment_date.isoformat() if order.second_payment_date else None,
+                'third_payment_date': order.third_payment_date.isoformat() if order.third_payment_date else None,
+
+                'first_payment_amount': order.first_payment_amount,
+                'second_payment_amount': order.second_payment_amount,
+                'third_payment_amount': order.third_payment_amount,
+
+                'first_payment_state': order.first_payment_state,
+                'second_payment_state': order.second_payment_state,
+                'third_payment_state': order.third_payment_state,
+
+                'amount_residual': order.amount_residual,
+               
+                'user_id': order.user_id.id or None,
+                'user_name': order.user_id.name or None,
+
+                'order_lines': [{
+                'id': l.id or None,
+                'product_id': l.product_id.id or None,
+                'product_name': l.product_id.name or None,
+                'product_uom_qty': l.product_uom_qty or None,
+                'product_uom': l.product_uom.id or None,
+                'product_uom_name': l.product_uom.name or None,
+                'price_unit': l.price_unit or None,
+                'price_subtotal': l.price_subtotal or None,
+                'price_tax': l.price_tax or None,
+                'price_total': l.price_total or None,
+                'qty_delivered': l.qty_delivered or None,
+                'qty_to_invoice': l.qty_to_invoice or None,
+                'qty_invoiced': l.qty_invoiced or None
+                } for l in order.order_line if l.product_id and l.product_id.name != 'Acompte']
+            }
+
+                resp = werkzeug.wrappers.Response(
+                    status=200,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                    response=json.dumps(order_data)
+                )
+                return resp
+
+        return  werkzeug.wrappers.Response(
+            status=400,
+            content_type='application/json; charset=utf-8',
+            headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            response=json.dumps("Commande non trouvée")
+        )
