@@ -335,9 +335,8 @@ class CommandeREST(http.Controller):
     @http.route('/api/tracking', methods=['POST'] , type='http', auth='none' , cors="*" , csrf=False )
     def api_orders_trackink_GET(self , **kw):
         data = json.loads(request.httprequest.data)
-        email = data['email']
-        name = data['name']
-        date = data.get('date')
+        email = data.get('email')
+        name = data.get('name')
 
         if email is None or name is None:
             return werkzeug.wrappers.Response(
@@ -354,7 +353,7 @@ class CommandeREST(http.Controller):
                 headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
                 response=json.dumps("Utilisateur n'existe pas")
             )
-        if partner :
+        if partner:
             order = request.env['sale.order'].sudo().search([('partner_id','=', partner.id), ('name','=', name)], limit=1)
             if order:
                 order_data = {

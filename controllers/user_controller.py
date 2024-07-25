@@ -208,36 +208,17 @@ class userREST(http.Controller):
     def api_users_POST(self, id, **kw):
         data = json.loads(request.httprequest.data)
         name = data.get('name')
-        email = data.get('email')
         city = data.get('city')
         phone = data.get('phone')
 
         if data:
             country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
-            # partner_email = request.env['res.partner'].sudo().search([('email', '=', email), ('id', '!=', id)], limit=1)
-            # user_email = request.env['res.users'].sudo().search([('login', '=', email), ('partner_id', '!=', id)], limit=1)
-            # if partner_email or user_email:
-            #     return werkzeug.wrappers.Response(
-            #         status=409,
-            #         content_type='application/json; charset=utf-8',
-            #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-            #         response=json.dumps("Utilisateur avec cet adresse mail existe déjà")
-            #     )
             partner_phone = request.env['res.partner'].sudo().search([('phone', '=', phone), ('id', '!=', id)], limit=1)
             partner = request.env['res.partner'].sudo().search([ ('id', '=', id)], limit=1)
-
-            # if partner_phone and phone != partner.phone:
-            #     return werkzeug.wrappers.Response(
-            #         status=409,
-            #         content_type='application/json; charset=utf-8',
-            #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-            #         response=json.dumps("Un autre partenaire avec ce numéro de téléphone existe déjà")
-            #     )
 
             if partner and partner_phone.phone != phone:
                 partner.write({
                     'name': name,
-                    # 'email': email,
                     'city': city,
                     'phone': phone,
                     'country_id': country.id or None,
@@ -247,7 +228,6 @@ class userREST(http.Controller):
                 if user:
                     user.write({
                         'name': name,
-                        # 'login': email,
                     })
 
                 resp = werkzeug.wrappers.Response(
@@ -271,10 +251,10 @@ class userREST(http.Controller):
                 )
                 return resp
             return werkzeug.wrappers.Response(
-                status=404,
+                status=400,
                 content_type='application/json; charset=utf-8',
                 headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                response=json.dumps({'message': "L'utilisateur n'existe pas"})
+                response=json.dumps({'message': "Un compte avec ce numéro téléphone existe déjà"})
             )
         return werkzeug.wrappers.Response(
             status=400,
