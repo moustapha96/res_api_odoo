@@ -20,6 +20,7 @@
     'depends': [
         'base',
         'web',
+        'mail'
     ],
     'data': [
         'data/ir_configparameter_data.xml',

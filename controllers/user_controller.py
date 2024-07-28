@@ -81,9 +81,9 @@ class userREST(http.Controller):
 
         if data:
            
-            company = request.env['res.company'].sudo().search([('id', '=', 1)], limit=1)
+            company = request.env['res.company'].sudo().search([('id', '=', 4)], limit=1)
             country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
-           
+
             # Création du partenaire
             partner_email = request.env['res.partner'].sudo().search([('email', '=', email)], limit=1)
             user_email = request.env['res.users'].sudo().search([('login', '=', email)], limit=1)
@@ -125,8 +125,8 @@ class userREST(http.Controller):
                     'active': True,
                     # 'karma': 0,
                     'notification_type': 'email',
-                    'company_id': partner.company_id.id,
-                    'company_ids': [partner.company_id.id],
+                    'company_id': company.id,
+                    'company_ids': [company.id],
                     'create_uid': 1
                 })
 

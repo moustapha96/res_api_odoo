@@ -727,3 +727,4 @@ else:
         from . import facture_controller
         from . import payment_controller
         from . import journal_currency_controller
+        from . import mailer_controller

@@ -13,11 +13,18 @@ class PaymentREST(http.Controller):
         try:
             order = request.env['sale.order'].sudo().search([ ('id', '=', id) ], limit=1)
             partner = request.env['res.partner'].sudo().search([('id', '=', order.partner_id.id)], limit=1)
-            company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1)
-            payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1)
-            journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ])
+            company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1) #company : My Company (San Francisco) id = 1
+            payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
+            journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ])  # type = sale & company id = 1  ==> journal id = 1 / si journal id = 7 : CASH
             payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
-                    ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1)
+                    ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1) # si journal est cash (id = 7)  et payment method inbound == payment method line id  = 1
+
+
+            # Par defaut
+            # journal = request.env['account.journal'].sudo().search([('id', '=', 7 )] , limit=1)
+            # payment_method = request.env['account.payment.method'].sudo().search([ ( 'id', '=', 1 ) ], limit=1)
+            # payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([('id', '=', 1) ], limit=1)
+
             user = request.env['res.users'].sudo().search([('id', '=', request.env.uid)], limit=1)
             if not user or user._is_public():
                 admin_user = request.env.ref('base.user_admin')
@@ -240,12 +247,18 @@ class PaymentREST(http.Controller):
         try:
             order = request.env['sale.order'].sudo().search([ ('id', '=', id) ], limit=1)
             partner = request.env['res.partner'].sudo().search([('id', '=', order.partner_id.id)], limit=1)
-            company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1)
-            payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1)
-            journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)
+            company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1) #company : My Company (San Francisco) id = 1
+
+            _logger.info(f'partner {partner.email} ')
+            _logger.info(f'company {company.name} ')
+
+            journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+            payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
             payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
-                    ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1)
+                    ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1) # si journal est cash (id = 7)  et payment method inbound ==> payment method line id  = 1
+
             _logger.info(f'journal {journal} ')
+            _logger.info(f'journal {payment_method} ')
 
             user = request.env['res.users'].sudo().browse(request.env.uid)
             if not user or user._is_public():
@@ -256,37 +269,80 @@ class PaymentREST(http.Controller):
             if order:
                 # order.action_confirm()
                 order_lines = request.env['sale.order.line'].sudo().search([('order_id','=', order.id ) ])
-                # Création de la facture
-                new_invoice = request.env['account.move'].sudo().create({
-                    'move_type': 'out_invoice',
-                    'amount_total' : order.amount_total,
-                    'invoice_date': datetime.datetime.now() ,
-                    'invoice_date_due': datetime.datetime.now(),
-                    'invoice_line_ids': [],
-                    'ref': 'Facture '+ order.name,
-                    'journal_id': journal.id,
-                    'partner_id': partner.id,
-                    'company_id':company.id,
-                    'currency_id': partner.currency_id.id,
-                })
-                # Création des lignes de facture
+                invoice_lines = []
+
                 for order_line in order_lines:
                     product_id = order_line.product_id.id
                     quantity = order_line.product_uom_qty
                     price_unit = order_line.price_unit
 
-                    invoice_line = request.env['account.move.line'].sudo().create({
-                        'move_id': new_invoice.id,
+                    # Assurez-vous que le compte de revenu est défini
+                    account_id = order_line.product_id.property_account_income_id.id or order_line.product_id.categ_id.property_account_income_categ_id.id
+                    if not account_id:
+                        raise ValueError("Le compte de revenu n'est pas défini pour le produit ou la catégorie de produit.")
+
+                    invoice_lines.append((0, 0, {
                         'product_id': product_id,
                         'quantity': quantity,
                         'price_unit': price_unit,
-                        # 'company_id': company.id,
-                        # 'currency_id': company.currency_id.id,
                         'partner_id': partner.id,
                         'ref': 'Facture ' + order.name,
-                        # 'name': order.name
-                    })
+                        'account_id': account_id,
+                        'debit': 0,
+                        'credit': price_unit * quantity,
+                        'name': order_line.name,
+                    }))
+
+                new_invoice = request.env['account.move'].sudo().create({
+                    'move_type': 'out_invoice',
+                    'amount_total': order.amount_total,
+                    'invoice_date': datetime.datetime.now(),
+                    'invoice_date_due': datetime.datetime.now(),
+                    'invoice_line_ids': invoice_lines,
+                    'ref': 'Facture ' + order.name,
+                    'journal_id': journal.id,
+                    'partner_id': partner.id,
+                    'company_id': company.id,
+                    'currency_id': partner.currency_id.id,
+                })
+
                 new_invoice.action_post()
+
+                # Création de la facture
+                # new_invoice = request.env['account.move'].sudo().create({
+                #     'move_type': 'out_invoice',
+                #     'amount_total' : order.amount_total,
+                #     'invoice_date': datetime.datetime.now() ,
+                #     'invoice_date_due': datetime.datetime.now(),
+                #     'invoice_line_ids': [],
+                #     'ref': 'Facture '+ order.name,
+                #     'journal_id': journal.id,
+                #     'partner_id': partner.id,
+                #     'company_id':company.id,
+                #     'currency_id': partner.currency_id.id,
+                # })
+                # Création des lignes de facture
+                # for order_line in order_lines:
+                #     product_id = order_line.product_id.id
+                #     quantity = order_line.product_uom_qty
+                #     price_unit = order_line.price_unit
+
+                #     invoice_line = request.env['account.move.line'].sudo().create({
+                #         'move_id': new_invoice.id,
+                #         'product_id': product_id,
+                #         'quantity': quantity,
+                #         'price_unit': price_unit,
+                #         'company_id': company.id,
+                #         'currency_id': company.currency_id.id,
+                #         'partner_id': partner.id,
+                #         'ref': 'Facture ' + order.name,
+                #         'journal_id':journal.id,
+                #         'debit': 0,
+                #         'credit': 0,
+                #         'name': order.name,
+                #         # 'account_id': 452
+                #     })
+                # new_invoice.action_post()
 
             # enregistrement payment
             if order :
@@ -299,8 +355,8 @@ class PaymentREST(http.Controller):
                     'partner_type': 'customer',
                     'partner_id': partner.id,
                     'amount': order.amount_total,
-                    'journal_id': journal.id,
-                    'currency_id': partner.currency_id.id,
+                    'journal_id': new_invoice.journal_id.id,
+                    'currency_id': new_invoice.currency_id.id, #42
                     'payment_method_line_id': 1,
                     'payment_method_id': payment_method.id, # inbound
                     'sale_id': order.id,
@@ -315,7 +371,8 @@ class PaymentREST(http.Controller):
                     #     'is_reconciled': True,
                     #     # 'move_id': new_invoice.id
                     # })
-
+                    # Reconcilier le paiement avec la facture
+                    account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
 
                     return request.make_response(
                             json.dumps({
@@ -325,16 +382,16 @@ class PaymentREST(http.Controller):
                                 'type_sale': order.type_sale,
                                 'currency_id': order.currency_id.id,
                                 'company_id': order.company_id.id,
-                                'commitment_date': order.commitment_date.isoformat(),
+                                # 'commitment_date': order.commitment_date.isoformat(),
                                 'state': order.state,
                                 'amount_total': order.amount_total,
-                                'invoice_id': account_payment.move_id.id or None ,
-                                'is_reconciled': account_payment.is_reconciled,
-                                'payment_id': account_payment.id,
-                                'payment_name': account_payment.name,
-                                'sale_order': account_payment.sale_id.id,
-                                'move_id': account_payment.move_id.id,
-                                'move_name': account_payment.move_id.name,
+                                # 'invoice_id': account_payment.move_id.id or None ,
+                                # 'is_reconciled': account_payment.is_reconciled,
+                                # 'payment_id': account_payment.id,
+                                # 'payment_name': account_payment.name,
+                                # 'sale_order': account_payment.sale_id.id,
+                                # 'move_id': account_payment.move_id.id,
+                                # 'move_name': account_payment.move_id.name,
                                 'invoice_status': order.invoice_status
                             }),
                             headers={'Content-Type': 'application/json'}
@@ -360,10 +417,15 @@ class PaymentREST(http.Controller):
             order = request.env['sale.order'].sudo().search([ ('id', '=', id) ], limit=1)
             partner = request.env['res.partner'].sudo().search([('id', '=', order.partner_id.id)], limit=1)
             company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1)
-            payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1)
-            journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ])
-            payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
-                    ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1)
+            # payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1)
+            # journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ])
+            # payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
+            #         ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1)
+
+            journal = request.env['account.journal'].sudo().search([('id', '=', 7 )] , limit=1) # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+            payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
+            payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([ ('payment_method_id', '=', payment_method.id), ( 'journal_id', '=', journal.id ) ], limit=1)  # si journal est cash (id = 7)  et payment method inbound ==> payment method line id  = 1
+
             user = request.env['res.users'].sudo().search([('id', '=', request.env.uid)], limit=1)
             if not user or user._is_public():
                 admin_user = request.env.ref('base.user_admin')
