@@ -232,3 +232,40 @@ class MailerRest(http.Controller):
         except Exception as e:
             _logger.error(f'Error sending email: {str(e)}')
             return {'status': 'error', 'message': str(e)}
+
+
+
+
+    @http.route('/api/mail_contact', methods=['POST'], type='json', auth='none', cors="*", csrf=False)
+    def send_welcome_mail(self, **kw):
+        data = json.loads(request.httprequest.data)
+
+        email = data.get('email')
+        nom = data.get('nom')
+        sujet = data.get('sujet')
+        message = data.get('message')
+        
+        # Récupérer ou créer une instance de IrMailServer
+        mail_server = request.env['ir.mail_server'].sudo().search([], limit=1)
+
+        # Récupérer l'utilisateur associé à l'adresse e-mail
+        user = request.env['res.users'].sudo().search([('email', '=', email)], limit=1)
+        if not user:
+            return {'status': 'error', 'message': 'User not found for the given email'}
+
+        # Récupérer le template d'e-mail
+        mail_template = request.env['mail.template'].sudo().search([('id', '=', 33)], limit=1)
+        if not mail_template:
+            return {'status': 'error', 'message': 'Mail template not found'}
+
+        # Générer le contenu de l'e-mail en utilisant le template
+        email_values = mail_template.generate_email([user.id], fields=['email_from', 'email_to', 'subject', 'body_html'])
+
+        # Créer et envoyer l'e-mail
+        mail_mail = request.env['mail.mail'].sudo().create(email_values[user.id])
+        try:
+            mail_mail.send()
+            return {'status': 'success', 'message': 'Email sent successfully'}
+        except Exception as e:
+            _logger.error(f'Error sending email: {str(e)}')
+            return {'status': 'error', 'message': str(e)}

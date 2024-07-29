@@ -271,78 +271,78 @@ class PaymentREST(http.Controller):
                 order_lines = request.env['sale.order.line'].sudo().search([('order_id','=', order.id ) ])
                 invoice_lines = []
 
-                for order_line in order_lines:
-                    product_id = order_line.product_id.id
-                    quantity = order_line.product_uom_qty
-                    price_unit = order_line.price_unit
-
-                    # Assurez-vous que le compte de revenu est défini
-                    account_id = order_line.product_id.property_account_income_id.id or order_line.product_id.categ_id.property_account_income_categ_id.id
-                    if not account_id:
-                        raise ValueError("Le compte de revenu n'est pas défini pour le produit ou la catégorie de produit.")
-
-                    invoice_lines.append((0, 0, {
-                        'product_id': product_id,
-                        'quantity': quantity,
-                        'price_unit': price_unit,
-                        'partner_id': partner.id,
-                        'ref': 'Facture ' + order.name,
-                        'account_id': account_id,
-                        'debit': 0,
-                        'credit': price_unit * quantity,
-                        'name': order_line.name,
-                    }))
-
-                new_invoice = request.env['account.move'].sudo().create({
-                    'move_type': 'out_invoice',
-                    'amount_total': order.amount_total,
-                    'invoice_date': datetime.datetime.now(),
-                    'invoice_date_due': datetime.datetime.now(),
-                    'invoice_line_ids': invoice_lines,
-                    'ref': 'Facture ' + order.name,
-                    'journal_id': journal.id,
-                    'partner_id': partner.id,
-                    'company_id': company.id,
-                    'currency_id': partner.currency_id.id,
-                })
-
-                new_invoice.action_post()
-
-                # Création de la facture
-                # new_invoice = request.env['account.move'].sudo().create({
-                #     'move_type': 'out_invoice',
-                #     'amount_total' : order.amount_total,
-                #     'invoice_date': datetime.datetime.now() ,
-                #     'invoice_date_due': datetime.datetime.now(),
-                #     'invoice_line_ids': [],
-                #     'ref': 'Facture '+ order.name,
-                #     'journal_id': journal.id,
-                #     'partner_id': partner.id,
-                #     'company_id':company.id,
-                #     'currency_id': partner.currency_id.id,
-                # })
-                # Création des lignes de facture
                 # for order_line in order_lines:
                 #     product_id = order_line.product_id.id
                 #     quantity = order_line.product_uom_qty
                 #     price_unit = order_line.price_unit
 
-                #     invoice_line = request.env['account.move.line'].sudo().create({
-                #         'move_id': new_invoice.id,
+                #     # Assurez-vous que le compte de revenu est défini
+                #     account_id = order_line.product_id.property_account_income_id.id or order_line.product_id.categ_id.property_account_income_categ_id.id
+                #     if not account_id:
+                #         raise ValueError("Le compte de revenu n'est pas défini pour le produit ou la catégorie de produit.")
+
+                #     invoice_lines.append((0, 0, {
                 #         'product_id': product_id,
                 #         'quantity': quantity,
                 #         'price_unit': price_unit,
-                #         'company_id': company.id,
-                #         'currency_id': company.currency_id.id,
                 #         'partner_id': partner.id,
                 #         'ref': 'Facture ' + order.name,
-                #         'journal_id':journal.id,
+                #         'account_id': account_id,
                 #         'debit': 0,
-                #         'credit': 0,
-                #         'name': order.name,
-                #         # 'account_id': 452
-                #     })
+                #         'credit': price_unit * quantity,
+                #         'name': order_line.name,
+                #     }))
+
+                # new_invoice = request.env['account.move'].sudo().create({
+                #     'move_type': 'out_invoice',
+                #     'amount_total': order.amount_total,
+                #     'invoice_date': datetime.datetime.now(),
+                #     'invoice_date_due': datetime.datetime.now(),
+                #     'invoice_line_ids': invoice_lines,
+                #     'ref': 'Facture ' + order.name,
+                #     'journal_id': journal.id,
+                #     'partner_id': partner.id,
+                #     'company_id': company.id,
+                #     'currency_id': partner.currency_id.id,
+                # })
+
                 # new_invoice.action_post()
+
+                # Création de la facture
+                new_invoice = request.env['account.move'].sudo().create({
+                    'move_type': 'out_invoice',
+                    'amount_total' : order.amount_total,
+                    'invoice_date': datetime.datetime.now() ,
+                    'invoice_date_due': datetime.datetime.now(),
+                    'invoice_line_ids': [],
+                    'ref': 'Facture '+ order.name,
+                    'journal_id': journal.id,
+                    'partner_id': partner.id,
+                    'company_id':company.id,
+                    'currency_id': partner.currency_id.id,
+                })
+                # Création des lignes de facture
+                for order_line in order_lines:
+                    product_id = order_line.product_id.id
+                    quantity = order_line.product_uom_qty
+                    price_unit = order_line.price_unit
+
+                    invoice_line = request.env['account.move.line'].sudo().create({
+                        'move_id': new_invoice.id,
+                        'product_id': product_id,
+                        'quantity': quantity,
+                        'price_unit': price_unit,
+                        'company_id': company.id,
+                        'currency_id': company.currency_id.id,
+                        'partner_id': partner.id,
+                        'ref': 'Facture ' + order.name,
+                        'journal_id':journal.id,
+                        'debit': 0,
+                        'credit': 0,
+                        'name': order.name,
+                        # 'account_id': 452
+                    })
+                new_invoice.action_post()
 
             # enregistrement payment
             if order :
