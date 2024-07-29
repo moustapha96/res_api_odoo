@@ -521,27 +521,39 @@ class PreCommandeREST(http.Controller):
                             'invoice_status': 'to invoice'
                         })
                      # Création de la facture
-                    invoice = request.env['account.move'].sudo().create({
-                        'partner_id': partner_id,
+                    new_invoice = request.env['account.move'].sudo().create({
                         'move_type': 'out_invoice',
-                        'currency_id': company.currency_id.id,
-                        'company_id': company.id,
-                        'invoice_date': datetime.datetime.now(),
-                        'invoice_line_ids': [(0, 0, {
-                            'product_id': item['id'],
-                            'quantity': item['quantity'],
-                            'price_unit': item['list_price'],
-                            'account_id': request.env['account.account'].sudo().search([('code', '=', '200000')], limit=1).id,  # Exemple de compte
-                            'credit': item['list_price'] * item['quantity'],
-                            'currency_id': company.currency_id.id,
-                            'ref': 'Facture ' + order.name,
+                        'amount_total' : order.amount_total,
+                        'invoice_date': datetime.datetime.now() ,
+                        'invoice_date_due': datetime.datetime.now(),
+                        'invoice_line_ids': [],
+                        'ref': 'Facture '+ order.name,
+                        'journal_id': journal.id,
+                        'partner_id': partner.id,
+                        'company_id':company.id,
+                        'currency_id': partner.currency_id.id,
+                    })
+                    for order_line in order_lines:
+                        product_id = order_line.product_id.id
+                        quantity = order_line.product_uom_qty
+                        price_unit = order_line.price_unit
+
+                        invoice_line = request.env['account.move.line'].sudo().create({
+                            'move_id': new_invoice.id,
+                            'product_id': product_id,
+                            'quantity': quantity,
+                            'price_unit': price_unit,
                             'company_id': company.id,
+                            'currency_id': company.currency_id.id,
                             'partner_id': partner.id,
+                            'ref': 'Facture ' + order.name,
                             'journal_id':journal.id,
+                            'account_id': request.env['account.account'].sudo().search([('code', '=', '200000')], limit=1).id,
+                            'credit': price_unit * quantity,
                             'name': order.name,
                             'debit': 0.0,
-                        }) for item in order_lines]
-                    })
+                        })
+                    new_invoice.action_post()
                     order.action_confirm()
             else:
                 raise ValueError('Company not found')
