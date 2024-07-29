@@ -532,13 +532,14 @@ class PreCommandeREST(http.Controller):
                             'quantity': item['quantity'],
                             'price_unit': item['list_price'],
                             'account_id': request.env['account.account'].sudo().search([('code', '=', '200000')], limit=1).id,  # Exemple de compte
-
-                            'company_id': company.id,
+                            'credit': item['list_price'] * item['quantity'],
                             'currency_id': company.currency_id.id,
-                            'partner_id': partner.id,
                             'ref': 'Facture ' + order.name,
+                            'company_id': company.id,
+                            'partner_id': partner.id,
                             'journal_id':journal.id,
                             'name': order.name,
+                            'debit': 0.0,
                         }) for item in order_lines]
                     })
                     order.action_confirm()
