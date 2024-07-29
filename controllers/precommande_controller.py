@@ -518,17 +518,21 @@ class PreCommandeREST(http.Controller):
                             # 'type_sale': 'preorder',
                             'invoice_status': 'to invoice'
                         })
-                        # Ajouter les champs manquants pour account_move_line
-                        account_id = request.env['account.account'].sudo().search([('code', '=', '200000')], limit=1).id  # Exemple de compte
-                        request.env['account.move.line'].sudo().create({
-                            'move_id': order.invoice_ids.id if order.invoice_ids else None,
-                            'account_id': account_id,
+                     # Création de la facture
+                    invoice = request.env['account.move'].sudo().create({
+                        'partner_id': partner_id,
+                        'move_type': 'out_invoice',
+                        'currency_id': company.currency_id.id,
+                        'company_id': company.id,
+                        'invoice_date': datetime.datetime.now(),
+                        'invoice_line_ids': [(0, 0, {
+                            'product_id': item['id'],
+                            'quantity': item['quantity'],
+                            'price_unit': item['list_price'],
+                            'account_id': request.env['account.account'].sudo().search([('code', '=', '200000')], limit=1).id,  # Exemple de compte
                             'name': 'Acompte',
-                            'debit': 0.0,
-                            'credit': price_unit * product_uom_qty,
-                            'company_id': company.id,
-                            'currency_id': company.currency_id.id,
-                        })
+                        }) for item in order_lines]
+                    })
                     order.action_confirm()
             else:
                 raise ValueError('Company not found')
