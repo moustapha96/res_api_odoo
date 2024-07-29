@@ -320,7 +320,7 @@ class PaymentREST(http.Controller):
                     'amount': order.amount_total,
                     'journal_id': journal.id,
                     'currency_id': journal.currency_id.id, #42
-                    'payment_method_line_id': 1,
+                    'payment_method_line_id': payment_method_line_vr.id,
                     'payment_method_id': payment_method.id, # inbound
                     'sale_id': order.id,
                 })
