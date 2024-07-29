@@ -540,7 +540,7 @@ class PreCommandeREST(http.Controller):
 
                         invoice_line = request.env['account.move.line'].sudo().create({
                             'move_id': new_invoice.id,
-                            'product_id': product_id,
+                            # 'product_id': product_id,
                             'quantity': quantity,
                             'price_unit': price_unit,
                             'company_id': company.id,
