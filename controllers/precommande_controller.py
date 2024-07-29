@@ -612,7 +612,6 @@ class PreCommandeREST(http.Controller):
                 headers={'Content-Type': 'application/json'}
             )
 
-        
 
 
 

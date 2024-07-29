@@ -199,7 +199,7 @@ class CommandeREST(http.Controller):
                 'product_id': product_id,
                 'product_uom_qty': product_uom_qty,
                 'price_unit': price_unit,
-                # 'state': 'sale'
+                'state': 'sale'
             })
 
         # if order:

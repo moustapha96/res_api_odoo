@@ -252,7 +252,8 @@ class PaymentREST(http.Controller):
             _logger.info(f'partner {partner.email} ')
             _logger.info(f'company {company.name} ')
 
-            journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+            journal = request.env['account.journal'].sudo().search([('id', '=', 7) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+            # journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
             payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
             payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
                     ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1) # si journal est cash (id = 7)  et payment method inbound ==> payment method line id  = 1
@@ -271,75 +272,40 @@ class PaymentREST(http.Controller):
                 order_lines = request.env['sale.order.line'].sudo().search([('order_id','=', order.id ) ])
                 invoice_lines = []
 
+                # new_invoice.action_post()
+
+                # Création de la facture
+                # new_invoice = request.env['account.move'].sudo().create({
+                #     'move_type': 'out_invoice',
+                #     'amount_total' : order.amount_total,
+                #     'invoice_date': datetime.datetime.now() ,
+                #     'invoice_date_due': datetime.datetime.now(),
+                #     'invoice_line_ids': [],
+                #     'ref': 'Facture '+ order.name,
+                #     'journal_id': journal.id,
+                #     'partner_id': partner.id,
+                #     'company_id':company.id,
+                #     'currency_id': partner.currency_id.id,
+                # })
+                # Création des lignes de facture
                 # for order_line in order_lines:
                 #     product_id = order_line.product_id.id
                 #     quantity = order_line.product_uom_qty
                 #     price_unit = order_line.price_unit
 
-                #     # Assurez-vous que le compte de revenu est défini
-                #     account_id = order_line.product_id.property_account_income_id.id or order_line.product_id.categ_id.property_account_income_categ_id.id
-                #     if not account_id:
-                #         raise ValueError("Le compte de revenu n'est pas défini pour le produit ou la catégorie de produit.")
-
-                #     invoice_lines.append((0, 0, {
+                #     invoice_line = request.env['account.move.line'].sudo().create({
+                #         'move_id': new_invoice.id,
                 #         'product_id': product_id,
                 #         'quantity': quantity,
                 #         'price_unit': price_unit,
+                #         'company_id': company.id,
+                #         'currency_id': company.currency_id.id,
                 #         'partner_id': partner.id,
                 #         'ref': 'Facture ' + order.name,
-                #         'account_id': account_id,
-                #         'debit': 0,
-                #         'credit': price_unit * quantity,
-                #         'name': order_line.name,
-                #     }))
-
-                # new_invoice = request.env['account.move'].sudo().create({
-                #     'move_type': 'out_invoice',
-                #     'amount_total': order.amount_total,
-                #     'invoice_date': datetime.datetime.now(),
-                #     'invoice_date_due': datetime.datetime.now(),
-                #     'invoice_line_ids': invoice_lines,
-                #     'ref': 'Facture ' + order.name,
-                #     'journal_id': journal.id,
-                #     'partner_id': partner.id,
-                #     'company_id': company.id,
-                #     'currency_id': partner.currency_id.id,
-                # })
-
+                #         'journal_id':journal.id,
+                #         'name': order.name,
+                #     })
                 # new_invoice.action_post()
-
-                # Création de la facture
-                new_invoice = request.env['account.move'].sudo().create({
-                    'move_type': 'out_invoice',
-                    'amount_total' : order.amount_total,
-                    'invoice_date': datetime.datetime.now() ,
-                    'invoice_date_due': datetime.datetime.now(),
-                    'invoice_line_ids': [],
-                    'ref': 'Facture '+ order.name,
-                    'journal_id': journal.id,
-                    'partner_id': partner.id,
-                    'company_id':company.id,
-                    'currency_id': partner.currency_id.id,
-                })
-                # Création des lignes de facture
-                for order_line in order_lines:
-                    product_id = order_line.product_id.id
-                    quantity = order_line.product_uom_qty
-                    price_unit = order_line.price_unit
-
-                    invoice_line = request.env['account.move.line'].sudo().create({
-                        'move_id': new_invoice.id,
-                        'product_id': product_id,
-                        'quantity': quantity,
-                        'price_unit': price_unit,
-                        'company_id': company.id,
-                        'currency_id': company.currency_id.id,
-                        'partner_id': partner.id,
-                        'ref': 'Facture ' + order.name,
-                        'journal_id':journal.id,
-                        'name': order.name,
-                    })
-                new_invoice.action_post()
 
             # enregistrement payment
             if order :
@@ -352,12 +318,23 @@ class PaymentREST(http.Controller):
                     'partner_type': 'customer',
                     'partner_id': partner.id,
                     'amount': order.amount_total,
-                    'journal_id': new_invoice.journal_id.id,
-                    'currency_id': new_invoice.currency_id.id, #42
+                    'journal_id': journal.id,
+                    'currency_id': journal.currency_id.id, #42
                     'payment_method_line_id': 1,
                     'payment_method_id': payment_method.id, # inbound
                     'sale_id': order.id,
                 })
+                # account_payment = request.env['account.payment'].sudo().create({
+                #     'payment_type': 'inbound',
+                #     'partner_type': 'customer',
+                #     'partner_id': partner.id,
+                #     'amount': order.amount_total,
+                #     'journal_id': new_invoice.journal_id.id,
+                #     'currency_id': new_invoice.currency_id.id, #42
+                #     'payment_method_line_id': 1,
+                #     'payment_method_id': payment_method.id, # inbound
+                #     'sale_id': order.id,
+                # })
                 if account_payment:
                     account_payment.action_post()
                     # new_invoice.write({
@@ -404,8 +381,6 @@ class PaymentREST(http.Controller):
                 json.dumps({'status': 'error', 'message': str(e)}),
                 headers={'Content-Type': 'application/json'}
             )
-
-
 
 
     @http.route('/api/precommande/<id>/payment/<amount>', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
