@@ -534,13 +534,14 @@ class PreCommandeREST(http.Controller):
                         'currency_id': partner.currency_id.id,
                     })
                     for order_line in order_lines:
-                        product_id = order_line.product_id.id
-                        quantity = order_line.product_uom_qty
-                        price_unit = order_line.price_unit
+
+                        product_id = item.get('id')
+                        quantity = item.get('quantity')
+                        price_unit = item.get('list_price')
 
                         invoice_line = request.env['account.move.line'].sudo().create({
                             'move_id': new_invoice.id,
-                            # 'product_id': product_id,
+                            'product_id': product_id,
                             'quantity': quantity,
                             'price_unit': price_unit,
                             'company_id': company.id,
