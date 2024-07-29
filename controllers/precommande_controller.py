@@ -488,6 +488,8 @@ class PreCommandeREST(http.Controller):
                 request.env = request.env(user=admin_user.id)
 
             company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1)
+            journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)
+
             if company:
                 # Création de commande
                 with request.env.cr.savepoint():
@@ -530,7 +532,13 @@ class PreCommandeREST(http.Controller):
                             'quantity': item['quantity'],
                             'price_unit': item['list_price'],
                             'account_id': request.env['account.account'].sudo().search([('code', '=', '200000')], limit=1).id,  # Exemple de compte
-                            'name': 'Acompte',
+
+                            'company_id': company.id,
+                            'currency_id': company.currency_id.id,
+                            'partner_id': partner.id,
+                            'ref': 'Facture ' + order.name,
+                            'journal_id':journal.id,
+                            'name': order.name,
                         }) for item in order_lines]
                     })
                     order.action_confirm()
