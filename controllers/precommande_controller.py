@@ -471,8 +471,8 @@ class PreCommandeREST(http.Controller):
         return response
 
 
-    @http.route('/api/precommandess', methods=['POST'], type='http', cors="*", auth='none', csrf=False)
-    def api_create_preorder_acompte(self, **kwargs):
+    @http.route('/api/precommandes_new', methods=['POST'], type='http', cors="*", auth='none', csrf=False)
+    def api_create_preorder_new(self, **kwargs):
         try:
             data = json.loads(request.httprequest.data)
             partner_id = int(data.get('partner_id'))
@@ -490,16 +490,16 @@ class PreCommandeREST(http.Controller):
             company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1)
             if company:
                 # Création de commande
-                order = request.env['sale.order'].sudo().create({
+                with request.env.cr.savepoint():
+                    order = request.env['sale.order'].sudo().create({
                         'partner_id': partner_id,
                         'type_sale': 'preorder',
                         'currency_id': company.currency_id.id,
                         'company_id': company.id,
                         'commitment_date': datetime.datetime.now() + datetime.timedelta(days=60),
-                        'state': 'sale'
+                        # 'state': 'sale'
                     })
-                if order:
-                    # with request.env.cr.savepoint():
+                    # order.action_confirm()
                     for item in order_lines:
                         product_id = item.get('id')
                         product_uom_qty = item.get('quantity')
@@ -512,10 +512,22 @@ class PreCommandeREST(http.Controller):
                             'product_id': product_id,
                             'product_uom_qty': product_uom_qty,
                             'price_unit': price_unit,
-                            'company_id': order.company_id.id,
+                            'company_id': company.id,
                             'currency_id': company.currency_id.id,
                             'state': 'sale',
+                            # 'type_sale': 'preorder',
                             'invoice_status': 'to invoice'
+                        })
+                        # Ajouter les champs manquants pour account_move_line
+                        account_id = request.env['account.account'].sudo().search([('code', '=', '200000')], limit=1).id  # Exemple de compte
+                        request.env['account.move.line'].sudo().create({
+                            'move_id': order.invoice_ids.id if order.invoice_ids else None,
+                            'account_id': account_id,
+                            'name': 'Acompte',
+                            'debit': 0.0,
+                            'credit': price_unit * product_uom_qty,
+                            'company_id': company.id,
+                            'currency_id': company.currency_id.id,
                         })
                     order.action_confirm()
             else:
@@ -534,15 +546,19 @@ class PreCommandeREST(http.Controller):
                     'company_id': order.company_id.id,
                     'commitment_date': order.commitment_date.isoformat(),
                     'state': order.state,
+
                     'first_payment_date': order.first_payment_date.isoformat() if order.first_payment_date else None,
                     'second_payment_date': order.second_payment_date.isoformat() if order.second_payment_date else None,
                     'third_payment_date': order.third_payment_date.isoformat() if order.third_payment_date else None,
+
                     'first_payment_amount': order.first_payment_amount,
                     'second_payment_amount': order.second_payment_amount,
                     'third_payment_amount': order.third_payment_amount,
+
                     'first_payment_state': order.first_payment_state,
                     'second_payment_state': order.second_payment_state,
                     'third_payment_state': order.third_payment_state,
+
                     'amount_residual': order.amount_residual,
                     'amount_total': order.amount_total,
                     'amount_tax': order.amount_tax,
@@ -554,10 +570,7 @@ class PreCommandeREST(http.Controller):
                             'quantity': order_line.product_uom_qty,
                             'list_price': order_line.price_unit,
                         } for order_line in order.order_line
-                    ],
-                    # 'first_invoice_id': first_invoice.id,
-                    # 'second_invoice_id': second_invoice.id,
-                    # 'third_invoice_id': third_invoice.id
+                    ]
                 })
             )
             return resp
@@ -572,7 +585,12 @@ class PreCommandeREST(http.Controller):
                 json.dumps({'status': 'error', 'message': str(e)}),
                 headers={'Content-Type': 'application/json'}
             )
+
         
+
+
+
+
     def create_factures ( self, order , partner_id, company):
         if order:
             # Création de la première facture d'acompte

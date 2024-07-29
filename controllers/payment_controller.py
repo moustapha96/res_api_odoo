@@ -337,10 +337,7 @@ class PaymentREST(http.Controller):
                         'partner_id': partner.id,
                         'ref': 'Facture ' + order.name,
                         'journal_id':journal.id,
-                        'debit': 0,
-                        'credit': 0,
                         'name': order.name,
-                        # 'account_id': 452
                     })
                 new_invoice.action_post()
 
@@ -372,7 +369,7 @@ class PaymentREST(http.Controller):
                     #     # 'move_id': new_invoice.id
                     # })
                     # Reconcilier le paiement avec la facture
-                    account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
+                    # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
 
                     return request.make_response(
                             json.dumps({
