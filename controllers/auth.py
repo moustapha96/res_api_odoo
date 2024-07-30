@@ -71,7 +71,23 @@ OUT__auth_deletetokens__SUCCESS_CODE = 200          # editable
 # HTTP controller of REST resources:
 
 class ControllerREST(http.Controller):
-    
+
+    def set_verification_status(self, email, is_verified):
+        # Stocker la valeur de isVerified dans ir.config_parameter
+        request.env['ir.config_parameter'].sudo().set_param(f'user_verification_{email}', is_verified)
+
+    def get_verification_status(self, email):
+        # Récupérer la valeur de isVerified depuis ir.config_parameter
+        return request.env['ir.config_parameter'].sudo().get_param(f'user_verification_{email}')
+
+    def get_user_avatar(self, email):
+        # Récupérer la valeur de isVerified depuis ir.config_parameter
+        return request.env['ir.config_parameter'].sudo().get_param(f'user_avatar_{email}')
+
+
+    def set_user_avatar(self, email, avatar):
+        # Stocker la valeur de isVerified dans ir.config_parameter
+        request.env['ir.config_parameter'].sudo().set_param(f'user_avatar_{email}', avatar)
     def define_token_expires_in(self, token_type, jdata):
         token_lifetime = jdata.get('%s_lifetime' % token_type)
         try:
@@ -87,7 +103,7 @@ class ControllerREST(http.Controller):
             except:
                 expires_in = None
         return int(round(expires_in or (sys.maxsize - time.time())))
-    
+
     # Login in Odoo database and get access tokens:
     @http.route('/api/auth/get_tokens', methods=['GET', 'POST'], type='http', auth='none', cors="*", csrf=False)
     def api_auth_gettokens(self, **kw):
@@ -173,6 +189,8 @@ class ControllerREST(http.Controller):
             'country_name': user_info.partner_id.country_id.name,
             'country_code': user_info.partner_id.country_id.code,
             'country_phone_code': user_info.partner_id.country_id.phone_code,
+            'is_verified' : self.get_verification_status(user_info.email) or None,
+            'avatar': self.get_user_avatar(user_info.email) or None
         }
         # Logout from Odoo and close current 'login' session:
         request.session.logout()
@@ -192,6 +210,7 @@ class ControllerREST(http.Controller):
                 'refresh_token':        refresh_token,
                 'refresh_expires_in':   refresh_expires_in,
                 'user_info':            user_data,
+                'is_verified' :         self.get_verification_status(user_info.email) or None
                }),
         )
         # Remove cookie session

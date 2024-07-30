@@ -3,6 +3,7 @@ from .main import *
 
 import json
 from odoo.http import request
+import requests
 _logger = logging.getLogger(__name__)
 
 
@@ -233,9 +234,6 @@ class MailerRest(http.Controller):
             _logger.error(f'Error sending email: {str(e)}')
             return {'status': 'error', 'message': str(e)}
 
-
-
-
     @http.route('/api/mail_contact', methods=['POST'], type='json', auth='none', cors="*", csrf=False)
     def send_welcome_mail(self, **kw):
         data = json.loads(request.httprequest.data)
@@ -269,3 +267,151 @@ class MailerRest(http.Controller):
         except Exception as e:
             _logger.error(f'Error sending email: {str(e)}')
             return {'status': 'error', 'message': str(e)}
+
+    @http.route('/api/verify_account/<email>', methods=['GET'], type='http', auth='none', cors="*", csrf=False)
+    def send_verification_mail(self, email, **kw):
+        # Récupérer ou créer une instance de IrMailServer
+        mail_server = request.env['ir.mail_server'].sudo().search([], limit=1)
+
+        # Récupérer l'utilisateur associé à l'adresse e-mail
+        user = request.env['res.users'].sudo().search([('email', '=', email)], limit=1)
+        if not user:
+            return {'status': 'error', 'message': 'User not found for the given email'}
+
+        # Construire le contenu de l'e-mail
+        subject = 'Vérifiez votre compte'
+       
+        body_html = f'''
+        <table border="0" cellpadding="0" cellspacing="0" style="padding-top: 16px; background-color: #FFFFFF; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;">
+            <tr>
+                <td align="center">
+                    <table border="0" cellpadding="0" cellspacing="0" width="590" style="padding: 16px; background-color: #FFFFFF; color: #454748; border-collapse:separate;">
+                        <tbody>
+                            <tr>
+                                <td align="center" style="min-width: 590px;">
+                                    <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;">
+                                        <tr>
+                                            <td valign="middle">
+                                                <span style="font-size: 10px;">Votre compte</span><br/>
+                                                <span style="font-size: 20px; font-weight: bold;">
+                                                    {user.name}
+                                                </span>
+                                            </td>
+                                            <td valign="middle" align="right">
+                                                <img style="padding: 0px; margin: 0px; height: auto; width: 80px;" src="http://orbitcity.sn/logo.png" alt="logo CCBM SHOP"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" style="text-align:center;">
+                                                <hr width="100%" style="background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;"/>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="min-width: 590px;">
+                                    <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;">
+                                        <tr>
+                                            <td valign="top" style="font-size: 13px;">
+                                                <div>
+                                                    Cher {user.name},<br/><br/>
+                                                    Votre compte a été créé avec succès !<br/>
+                                                    Votre identifiant est <strong>{user.email}</strong><br/>
+                                                    Pour accéder à votre compte, vous pouvez utiliser le lien suivant :
+                                                    <div style="margin: 16px 0px 16px 0px;">
+                                                        <a style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;" href="http://localhost:5173/login?mail={user.email}&isVerified=1&token={user.id}">
+                                                            Aller à Mon compte
+                                                        </a>
+                                                    </div>
+                                                    Merci,<br/>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align:center;">
+                                                <hr width="100%" style="background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;"/>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="min-width: 590px;">
+                                    <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: white; font-size: 11px; padding: 0px 8px 0px 8px; border-collapse:separate;">
+                                        <tr>
+                                            <td valign="middle" align="left">
+                                               {user.company_id.name}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td valign="middle" align="left" style="opacity: 0.7;">
+                                               {user.company_id.phone}
+                                                | <a style="text-decoration:none; color: #454748;" href="mailto:{user.company_id.email}">{user.company_id.email}</a>
+                                                | 
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td align="center" style="min-width: 590px;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;">
+                        <tr>
+                            <td style="text-align: center; font-size: 13px;">
+                                Généré par <a target="_blank" href="https://orbitcity.sn" style="color: #875A7B;">Orbit City</a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        '''
+
+        email_from = mail_server.smtp_user
+        email_to = email
+     
+        mail_server = request.env['ir.mail_server'].sudo().search([], limit=1)
+        if not mail_server:
+            mail_server = request.env['ir.mail_server'].sudo().create({
+                'name': 'My Mail Server',
+                'smtp_host': 'smtp.gmail.com',  # Utilisez le serveur SMTP correct
+                'smtp_port': 587,
+                'smtp_user': 'moustaphakhouma964@gmail.com',
+                'smtp_pass': 'moustaphakhouma1996',
+                'smtp_encryption': 'starttls',
+            })
+
+        
+        email_values = {
+            'email_from': email_from,
+            'email_to': email_to,
+            'subject': subject,
+            'body_html': body_html,
+            'state': 'outgoing',
+        }
+
+        # Construire le message e-mail
+        mail_mail = request.env['mail.mail'].sudo().create(email_values)
+
+        try:
+            # mail_server.send_email(message)
+            mail_mail.send()
+            return werkzeug.wrappers.Response(
+                status=200,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps("Email de verification envoyé avec succés")
+            )
+        except Exception as e:
+            _logger.error(f'Error sending email: {str(e)}')
+            return werkzeug.wrappers.Response(
+                status=200,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps({'status': 'error', 'message': str(e)})
+            )
