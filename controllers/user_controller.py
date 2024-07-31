@@ -186,7 +186,8 @@ class userREST(http.Controller):
                     'company_vat': user.company_id.vat or None,
                     'company_email': user.company_id.email or None,
                     'company_phone': user.company_id.phone or None,
-                    'is_verified' : self.get_verification_status(user.email) or None
+                    'is_verified' : self.get_verification_status(user.email) or None,
+                    'image_1920': user.partner_id.image_1920 or None
                 }
 
                 resp = werkzeug.wrappers.Response(
@@ -298,7 +299,8 @@ class userREST(http.Controller):
                             'country_code': user.partner_id.country_id.code,
                             'country_phone_code': user.partner_id.country_id.phone_code,
                             'is_verified' : self.get_verification_status(email) or None,
-                            'avatar': self.get_user_avatar(email) or None
+                            'avatar': self.get_user_avatar(email) or None,
+                            'image_1920': user.partner_id.image_1920 or None
                         })
                     )
                     return resp
@@ -395,7 +397,8 @@ class userREST(http.Controller):
                         'country_name': partner.country_id.name or None,
                         'country_code': partner.country_id.code,
                         'country_phone_code': partner.country_id.phone_code,
-                        'avatar': self.get_user_avatar(partner.email) or None
+                        'avatar': self.get_user_avatar(partner.email) or None,
+                        'image_1920': partner.image_1920 or None
                     })
                 )
                 return resp
@@ -464,6 +467,9 @@ class userREST(http.Controller):
             )
 
         if avatar_url is not None :
+            # user.write({
+            #     'image_1920': avatar_url,
+            # })
             self.set_user_avatar(user.email,avatar_url)
             return werkzeug.wrappers.Response(
                 status=200,
