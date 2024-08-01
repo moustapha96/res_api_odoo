@@ -172,7 +172,7 @@ class ControllerREST(http.Controller):
                 'image_256': p.image_256,
                 'categ_id': p.categ_id.name,
                 'type': p.type,
-                'description': p.description,
+                'description': p.product_tmpl_id.description,
                 'list_price': p.list_price,
                 'volume': p.volume,
                 'weight': p.weight,

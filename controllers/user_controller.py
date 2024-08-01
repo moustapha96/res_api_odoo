@@ -279,7 +279,7 @@ class userREST(http.Controller):
                     # Définir la variable transitoire pour isVerified
                     self.set_verification_status(email, '0')
                     # Appeler la fonction pour envoyer l'e-mail de vérification
-                    self.send_verification_mail(email)
+                    user.send_verification_mail(user.email)
 
                     resp = werkzeug.wrappers.Response(
                         status=201,
@@ -418,7 +418,7 @@ class userREST(http.Controller):
 
     @http.route('/api/users/verified/<email>', methods=['GET'], type='http', auth='none', cors="*", csrf=False)
     def api_users_verified(self, email):
-        user = request.env['res.users'].sudo().search([('email', '=', email)], limit=1)
+        user = request.env['res.partner'].sudo().search([('email', '=', email)], limit=1)
         if not user:
             return werkzeug.wrappers.Response(
                 status=400,
