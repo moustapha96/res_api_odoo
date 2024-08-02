@@ -346,7 +346,7 @@ class PaymentREST(http.Controller):
                     #     # 'move_id': new_invoice.id
                     # })
                     # Reconcilier le paiement avec la facture
-                    # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
+                    account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
 
                     return request.make_response(
                             json.dumps({

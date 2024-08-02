@@ -279,7 +279,8 @@ class userREST(http.Controller):
                     # Définir la variable transitoire pour isVerified
                     self.set_verification_status(email, '0')
                     # Appeler la fonction pour envoyer l'e-mail de vérification
-                    user.send_verification_mail(user.email)
+                    # user.send_verification_mail(user.email)
+                    self.send_verification_mail(user.email)
 
                     resp = werkzeug.wrappers.Response(
                         status=201,

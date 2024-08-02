@@ -8,6 +8,148 @@ _logger = logging.getLogger(__name__)
 
 class ControllerREST(http.Controller):
     
+    def send_verification_mail(self, email):
+        # Récupérer ou créer une instance de IrMailServer
+        mail_server = request.env['ir.mail_server'].sudo().search([], limit=1)
+
+        # Récupérer l'utilisateur associé à l'adresse e-mail
+        user = request.env['res.users'].sudo().search([('email', '=', email)], limit=1)
+        if not user:
+            return {'status': 'error', 'message': 'User not found for the given email'}
+
+        # Construire le contenu de l'e-mail
+        subject = 'Vérifiez votre compte'
+       
+        body_html = f'''
+        <table border="0" cellpadding="0" cellspacing="0" style="padding-top: 16px; background-color: #FFFFFF; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;">
+            <tr>
+                <td align="center">
+                    <table border="0" cellpadding="0" cellspacing="0" width="590" style="padding: 16px; background-color: #FFFFFF; color: #454748; border-collapse:separate;">
+                        <tbody>
+                            <tr>
+                                <td align="center" style="min-width: 590px;">
+                                    <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;">
+                                        <tr>
+                                            <td valign="middle">
+                                                <span style="font-size: 10px;">Votre compte</span><br/>
+                                                <span style="font-size: 20px; font-weight: bold;">
+                                                    {user.name}
+                                                </span>
+                                            </td>
+                                            <td valign="middle" align="right">
+                                                <img style="padding: 0px; margin: 0px; height: auto; width: 80px;" src="http://orbitcity.sn/logo.png" alt="logo CCBM SHOP"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" style="text-align:center;">
+                                                <hr width="100%" style="background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;"/>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="min-width: 590px;">
+                                    <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: white; padding: 0px 8px 0px 8px; border-collapse:separate;">
+                                        <tr>
+                                            <td valign="top" style="font-size: 13px;">
+                                                <div>
+                                                    Cher {user.name},<br/><br/>
+                                                    Votre compte a été créé avec succès !<br/>
+                                                    Votre identifiant est <strong>{user.email}</strong><br/>
+                                                    Pour accéder à votre compte, vous pouvez utiliser le lien suivant :
+                                                    <div style="margin: 16px 0px 16px 0px;">
+                                                        <a style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;" href="http://localhost:5173/login?mail={user.email}&isVerified=1&token={user.id}">
+                                                            Aller à Mon compte
+                                                        </a>
+                                                    </div>
+                                                    Merci,<br/>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align:center;">
+                                                <hr width="100%" style="background-color:rgb(204,204,204);border:medium none;clear:both;display:block;font-size:0px;min-height:1px;line-height:0; margin: 16px 0px 16px 0px;"/>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center" style="min-width: 590px;">
+                                    <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: white; font-size: 11px; padding: 0px 8px 0px 8px; border-collapse:separate;">
+                                        <tr>
+                                            <td valign="middle" align="left">
+                                               {user.company_id.name}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td valign="middle" align="left" style="opacity: 0.7;">
+                                               {user.company_id.phone}
+                                                | <a style="text-decoration:none; color: #454748;" href="mailto:{user.company_id.email}">{user.company_id.email}</a>
+                                                | 
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td align="center" style="min-width: 590px;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;">
+                        <tr>
+                            <td style="text-align: center; font-size: 13px;">
+                                Généré par <a target="_blank" href="https://orbitcity.sn" style="color: #875A7B;">Orbit City</a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        '''
+
+        email_from = mail_server.smtp_user
+        email_to = email
+
+        mail_server = request.env['ir.mail_server'].sudo().search([], limit=1)
+        # Définir les valeurs du message e-mail
+        email_values = {
+            'email_from': email_from,
+            'email_to': email_to,
+            'subject': subject,
+            'body_html': body_html,
+            'state': 'outgoing',
+        }
+        # Construire le message e-mail
+        mail_mail = request.env['mail.mail'].sudo().create(email_values)
+
+        try:
+            # mail_server.send_email(message)
+            mail_mail.send()
+            return {'status': 'succes', 'message': 'Mail envoyé avec succès'}
+        except Exception as e:
+            _logger.error(f'Error sending email: {str(e)}')
+            return {'status': 'error', 'message': str(e)}
+    
+    def set_verification_status(self, email, is_verified):
+        # Stocker la valeur de isVerified dans ir.config_parameter
+        request.env['ir.config_parameter'].sudo().set_param(f'user_verification_{email}', is_verified)
+
+    def get_verification_status(self, email):
+        # Récupérer la valeur de isVerified depuis ir.config_parameter
+        return request.env['ir.config_parameter'].sudo().get_param(f'user_verification_{email}')
+    
+    def set_user_avatar(self, email, avatar):
+        # Stocker la valeur de isVerified dans ir.config_parameter
+        request.env['ir.config_parameter'].sudo().set_param(f'user_avatar_{email}', avatar)
+
+    def get_user_avatar(self, email):
+        # Récupérer la valeur de isVerified depuis ir.config_parameter
+        return request.env['ir.config_parameter'].sudo().get_param(f'user_avatar_{email}')
+    
     def define_schema_params(self, request, model_name, method):
         schema = pre_schema = default_vals = None
         cr, uid = request.cr, request.session.uid
@@ -272,56 +414,6 @@ class ControllerREST(http.Controller):
 
 
 
-    # @http.route('/api/produits/last', methods=['GET'], type='http', auth='none', cors="*")
-    # def api__products_GET_LAST(self, **kw):
-    #     product_obj = request.env['product.product']  # Objet product.product
-       
-    #    # Rechercher les derniers produits créés
-    #     last_products = product_obj.sudo().search_read([], [], order='create_date desc', limit=10)
-        
-    #     product_data = []
-    #     if last_products:
-    #         for p in last_products:
-
-    #             product_data.append({
-    #                 'id': p.id,
-    #                 'name': p.name,
-    #                 'display_name': p.display_name,
-    #                 'quantite_en_stock': p.qty_available,
-    #                 'quantity_reception':p.incoming_qty,
-    #                 'quanitty_virtuelle_disponible': p.free_qty,
-    #                 'quanitty_commande': p.outgoing_qty,
-    #                 'quanitty_prevu': p.virtual_available,
-    #                 'image_1920': p.image_1920,
-    #                 'image_128' : p.image_128,
-    #                 'image_1024': p.image_1024,
-    #                 'image_512': p.image_512,
-    #                 'image_256': p.image_256,
-    #                 'categ_id': p.categ_id.name,
-    #                 'type': p.type,
-    #                 'description': p.description,
-    #                 'list_price': p.list_price,
-    #                 'volume': p.volume,
-    #                 'weight': p.weight,
-    #                 'sale_ok': p.sale_ok,
-    #                 'standard_price': p.standard_price,
-    #                 'active': p.active,
-    #             })
-
-    #         resp = werkzeug.wrappers.Response(
-    #             status=200,
-    #             content_type='application/json; charset=utf-8',
-    #             headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-    #             response=json.dumps(product_data)
-    #         )
-    #         return resp
-    #     return  werkzeug.wrappers.Response(
-    #         status=200,
-    #         content_type='application/json; charset=utf-8',
-    #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-    #         response=json.dumps("pas de données")  )
-
-
 
     # Reccuperer la liste des stats
     @http.route('/api/state', methods=['GET'], type='http', auth='none', cors='*' )
@@ -398,7 +490,7 @@ class ControllerREST(http.Controller):
         city = data.get('city')
         phone = data.get('phone')
 
-        company = request.env['res.company'].sudo().search([('id', '=', 1)], limit=1)
+        company = request.env['res.company'].sudo().search([('id', '=', 4)], limit=1)
         country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
 
         partner_email = request.env['res.partner'].sudo().search([('email', '=', email)], limit=1)
@@ -449,6 +541,7 @@ class ControllerREST(http.Controller):
                     partner.write({
                         'user_id': user.id
                     })
+                    self.send_verification_mail(user.email)
                     return werkzeug.wrappers.Response(
                         status=201,
                         content_type='application/json; charset=utf-8',
@@ -466,6 +559,9 @@ class ControllerREST(http.Controller):
                             'country_name': user.partner_id.country_id.name or None,
                             'country_code': user.partner_id.country_id.code,
                             'country_phone_code': user.partner_id.country_id.phone_code,
+                            'is_verified' : self.get_verification_status(email) or None,
+                            'avatar': self.get_user_avatar(email) or None,
+                            'image_1920': user.partner_id.image_1920 or None
                         })
                     )
 

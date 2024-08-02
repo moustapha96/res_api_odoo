@@ -252,7 +252,7 @@ class PreCommandeREST(http.Controller):
                             # 'type_sale': 'preorder',
                             'invoice_status': 'to invoice'
                         })
-                    # order.action_confirm()
+                    order.action_confirm()
             else:
                 raise ValueError('Company not found')
 
