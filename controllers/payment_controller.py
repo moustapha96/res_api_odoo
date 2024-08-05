@@ -509,8 +509,7 @@ class PaymentREST(http.Controller):
                 return request.make_response(
                     json.dumps({"error": "Missing required fields"}),
                     status=400,
-                    content_type='application/json; charset=utf-8',
-                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+                    headers={'Content-Type': 'application/json'}
                 )
 
             # request.env['payment.details'].sudo().set_payment_details(
@@ -535,16 +534,14 @@ class PaymentREST(http.Controller):
             return request.make_response(
                 json.dumps({"message": "Payment details saved successfully", "transaction_id": transaction_id }),
                 status=200,
-                content_type='application/json; charset=utf-8',
-                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+                headers={'Content-Type': 'application/json'}
             )
 
         except Exception as e:
             return request.make_response(
                 json.dumps({"error": str(e)}),
                 status=500,
-                content_type='application/json; charset=utf-8',
-                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+                headers={'Content-Type': 'application/json'}
             )
 
     # get payment details
@@ -558,21 +555,18 @@ class PaymentREST(http.Controller):
                 return request.make_response(
                     json.dumps(payment_details),
                     status=200,
-                    content_type='application/json; charset=utf-8',
-                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+                    headers={'Content-Type': 'application/json'}
                 )
             else:
                 return request.make_response(
                     json.dumps({"error": "Payment details not found"}),
                     status=404,
-                    content_type='application/json; charset=utf-8',
-                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+                    headers={'Content-Type': 'application/json'}
                 )
 
         except Exception as e:
             return request.make_response(
                 json.dumps({"error": str(e)}),
                 status=500,
-                content_type='application/json; charset=utf-8',
-                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+                headers={'Content-Type': 'application/json'}
             )
