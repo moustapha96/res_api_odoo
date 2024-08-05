@@ -15,6 +15,7 @@ class PaymentDetails(models.Model):
     amount = fields.Float(string='Amount', required=True)
     currency = fields.Char(string='Currency', required=True)
     payment_method = fields.Char(string='Payment Method', required=True)
+    payment_token = fields.Char(string='Payment Token', required=True)
     payment_date = fields.Datetime(string='Payment Date', required=True)
     order_id = fields.Char(string='Order ID', required=True)
     order_type = fields.Selection([
@@ -22,9 +23,14 @@ class PaymentDetails(models.Model):
         ('preorder', 'Preorder')
     ], string='Order Type', required=True)
     partner_id = fields.Many2one('res.partner', string='Partner', required=True)
+    payment_state = fields.Selection([
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed')
+    ], string='Payment State', required=True)
 
     @api.model
-    def set_payment_details(self, transaction_id, amount,  payment_date, order_id, order_type, partner_id):
+    def set_payment_details(self, transaction_id, amount,  payment_date, order_id, order_type, partner_id, payment_token, payment_state):
         # Enregistrer les détails du paiement
         self.create({
             'transaction_id': transaction_id,
@@ -35,6 +41,8 @@ class PaymentDetails(models.Model):
             'order_id': order_id,
             'order_type': order_type,
             'partner_id': partner_id,
+            'payment_token': payment_token,
+            'payment_state': payment_state,
         })
 
     @api.model
@@ -52,5 +60,7 @@ class PaymentDetails(models.Model):
                 'order_type': payment_details.order_type,
                 'partner_id': payment_details.partner_id.id,
                 'partner_name': payment_details.partner_id.name,
+                'payment_token': payment_details.payment_token,
+                'payment_state': payment_details.payment_state,
             }
         return None

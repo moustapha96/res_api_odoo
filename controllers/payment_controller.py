@@ -502,8 +502,9 @@ class PaymentREST(http.Controller):
             order_id = data.get('order_id')
             order_type = data.get('order_type')
             partner_id = data.get('partner_id')
-            # Convertir payment_date en objet datetime
             payment_date = datetime.datetime.now()
+            payment_token = data.get('payment_token')
+            payment_state = data.get('payment_state')
 
             if not all([transaction_id, amount, order_id, order_type, partner_id]):
                 return request.make_response(
@@ -518,18 +519,10 @@ class PaymentREST(http.Controller):
                 payment_date=payment_date,
                 order_id=order_id,
                 order_type=order_type,
-                partner_id=partner_id
+                partner_id=partner_id,
+                payment_token=payment_token,
+                payment_state=payment_state
             )
-            #  # Stocker les détails du paiement en mémoire
-            # self.payment_details_memory[transaction_id] = {
-            #     'transaction_id': transaction_id,
-            #     'amount': amount,
-            #     'payment_date': payment_date.strftime('%Y-%m-%d %H:%M:%S'),
-            #     'order_id': order_id,
-            #     'order_type': order_type,
-            #     'partner_id': partner_id,
-            # }
-           
 
             return request.make_response(
                 json.dumps({"message": "Payment details saved successfully", "transaction_id": transaction_id }),
@@ -549,8 +542,6 @@ class PaymentREST(http.Controller):
     def get_payment_details(self, transaction_id, **kw):
         try:
             payment_details = request.env['payment.details'].sudo().get_payment_details(transaction_id)
-            # payment_details = self.payment_details_memory.get(transaction_id)
-
             if payment_details:
                 return request.make_response(
                     json.dumps(payment_details),
