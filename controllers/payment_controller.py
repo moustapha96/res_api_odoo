@@ -252,8 +252,8 @@ class PaymentREST(http.Controller):
             _logger.info(f'partner {partner.email} ')
             _logger.info(f'company {company.name} ')
 
-            # journal = request.env['account.journal'].sudo().search([('id', '=', 7) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
-            journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+            journal = request.env['account.journal'].sudo().search([('id', '=', 6) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+            # journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
             _logger.info(f'JOURNAL {journal.id} ')
             payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
             payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
