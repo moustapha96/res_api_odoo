@@ -502,9 +502,9 @@ class PaymentREST(http.Controller):
             order_id = data.get('order_id')
             order_type = data.get('order_type')
             partner_id = data.get('partner_id')
-            payment_date = datetime.datetime.now()
             payment_token = data.get('payment_token')
             payment_state = data.get('payment_state')
+            payment_date = datetime.datetime.now()
 
             if not all([transaction_id, amount, order_id, order_type, partner_id]):
                 return request.make_response(
