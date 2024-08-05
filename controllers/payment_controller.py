@@ -486,3 +486,77 @@ class PaymentREST(http.Controller):
                 json.dumps({'status': 'error', 'message': str(e)}),
                 headers={'Content-Type': 'application/json'}
             )
+        
+
+    #methode pour enregistrer un payement
+    @http.route('/api/payment/set',  methods= ['POST'] , type="http" , cors="*" , auth="none", csrf=False  )
+    def set_payment_details(self, **kw):
+        try:
+            data = json.loads(request.httprequest.data)
+            transaction_id = data.get('transaction_id')
+            amount = data.get('amount')
+            order_id = data.get('order_id')
+            order_type = data.get('order_type')
+            partner_id = data.get('partner_id')
+            payment_date = datetime.datetime.now()
+
+            if not all([transaction_id, amount, order_id, order_type, partner_id]):
+                return request.make_response(
+                    json.dumps({"error": "Missing required fields"}),
+                    status=400,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+                )
+
+            request.env['payment.details'].sudo().set_payment_details(
+                transaction_id=transaction_id,
+                amount=amount,
+                payment_date=payment_date,
+                order_id=order_id,
+                order_type=order_type,
+                partner_id=partner_id
+            )
+
+            return request.make_response(
+                json.dumps({"message": "Payment details saved successfully", "transaction_id": transaction_id }),
+                status=200,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+            )
+
+        except Exception as e:
+            return request.make_response(
+                json.dumps({"error": str(e)}),
+                status=500,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+            )
+
+    # get payment details
+    @http.route('/api/payment/get/<transaction_id>', methods=['GET'], type='http', auth='none', cors='*')
+    def get_payment_details(self, transaction_id, **kw):
+        try:
+            payment_details = request.env['payment.details'].sudo().get_payment_details(transaction_id)
+
+            if payment_details:
+                return request.make_response(
+                    json.dumps(payment_details),
+                    status=200,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+                )
+            else:
+                return request.make_response(
+                    json.dumps({"error": "Payment details not found"}),
+                    status=404,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+                )
+
+        except Exception as e:
+            return request.make_response(
+                json.dumps({"error": str(e)}),
+                status=500,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')]
+            )
