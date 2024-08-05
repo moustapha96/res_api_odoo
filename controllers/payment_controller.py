@@ -512,23 +512,23 @@ class PaymentREST(http.Controller):
                     headers={'Content-Type': 'application/json'}
                 )
 
-            # request.env['payment.details'].sudo().set_payment_details(
-            #     transaction_id=transaction_id,
-            #     amount=amount,
-            #     payment_date=payment_date,
-            #     order_id=order_id,
-            #     order_type=order_type,
-            #     partner_id=partner_id
-            # )
-             # Stocker les détails du paiement en mémoire
-            self.payment_details_memory[transaction_id] = {
-                'transaction_id': transaction_id,
-                'amount': amount,
-                'payment_date': payment_date.strftime('%Y-%m-%d %H:%M:%S'),
-                'order_id': order_id,
-                'order_type': order_type,
-                'partner_id': partner_id,
-            }
+            request.env['payment.details'].sudo().set_payment_details(
+                transaction_id=transaction_id,
+                amount=amount,
+                payment_date=payment_date,
+                order_id=order_id,
+                order_type=order_type,
+                partner_id=partner_id
+            )
+            #  # Stocker les détails du paiement en mémoire
+            # self.payment_details_memory[transaction_id] = {
+            #     'transaction_id': transaction_id,
+            #     'amount': amount,
+            #     'payment_date': payment_date.strftime('%Y-%m-%d %H:%M:%S'),
+            #     'order_id': order_id,
+            #     'order_type': order_type,
+            #     'partner_id': partner_id,
+            # }
            
 
             return request.make_response(
@@ -548,8 +548,8 @@ class PaymentREST(http.Controller):
     @http.route('/api/payment/get/<transaction_id>', methods=['GET'], type='http', auth='none', cors='*')
     def get_payment_details(self, transaction_id, **kw):
         try:
-            # payment_details = request.env['payment.details'].sudo().get_payment_details(transaction_id)
-            payment_details = self.payment_details_memory.get(transaction_id)
+            payment_details = request.env['payment.details'].sudo().get_payment_details(transaction_id)
+            # payment_details = self.payment_details_memory.get(transaction_id)
 
             if payment_details:
                 return request.make_response(
