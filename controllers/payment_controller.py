@@ -513,7 +513,7 @@ class PaymentREST(http.Controller):
                     headers={'Content-Type': 'application/json'}
                 )
 
-            request.env['payment.details'].sudo().set_payment_details(
+            payment_details = request.env['payment.details'].sudo().set_payment_details(
                 transaction_id=transaction_id,
                 amount=amount,
                 payment_date=payment_date,
@@ -525,7 +525,18 @@ class PaymentREST(http.Controller):
             )
 
             return request.make_response(
-                json.dumps({"message": "Payment details saved successfully", "transaction_id": transaction_id }),
+                json.dumps({
+                        'transaction_id': payment_details.transaction_id,
+                        'amount': payment_details.amount,
+                        'currency': payment_details.currency,
+                        'payment_method': payment_details.payment_method,
+                        'payment_date': payment_details.payment_date.isoformat(),
+                        'order_id': payment_details.order_id,
+                        'order_type': payment_details.order_type,
+                        'partner_id': payment_details.partner_id.id,
+                        'partner_name': payment_details.partner_id.name,
+                        'payment_token': payment_details.payment_token,
+                        'payment_state': payment_details.payment_state,}),
                 status=200,
                 headers={'Content-Type': 'application/json'}
             )
