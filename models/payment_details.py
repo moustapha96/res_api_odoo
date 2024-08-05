@@ -18,7 +18,7 @@ class PaymentDetails(models.Model):
     payment_date = fields.Datetime(string='Payment Date', required=True)
     order_id = fields.Char(string='Order ID', required=True)
     order_type = fields.Selection([
-        ('order', 'Simple Order'),
+        ('order', 'Order'),
         ('preorder', 'Preorder')
     ], string='Order Type', required=True)
     partner_id = fields.Many2one('res.partner', string='Partner', required=True)
