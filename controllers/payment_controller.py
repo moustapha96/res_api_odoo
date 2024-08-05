@@ -502,8 +502,8 @@ class PaymentREST(http.Controller):
             order_id = data.get('order_id')
             order_type = data.get('order_type')
             partner_id = data.get('partner_id')
-           
-            payment_date = datetime.datetime.now()
+            # Convertir payment_date en objet datetime
+            payment_date = datetime.strptime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
 
             if not all([transaction_id, amount, order_id, order_type, partner_id]):
                 return request.make_response(
