@@ -541,7 +541,8 @@ class PaymentREST(http.Controller):
     @http.route('/api/payment/get/<transaction>', methods=['GET'], type='http', auth='none', cors='*')
     def get_payment_details(self, transaction, **kw):
         try:
-            payment_details = request.env['payment.details'].sudo().get_payment_details(transaction)
+            # payment_details = request.env['payment.details'].sudo().get_payment_details(transaction)
+            payment_details = request.env['payment.details'].sudo().search([('transaction_id', '=', transaction)], limit=1)
             if payment_details:
                 return request.make_response(
                     json.dumps({
