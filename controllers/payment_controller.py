@@ -516,6 +516,7 @@ class PaymentREST(http.Controller):
                 order_type=order_type,
                 partner_id=partner_id
             )
+           
 
             return request.make_response(
                 json.dumps({"message": "Payment details saved successfully", "transaction_id": transaction_id }),
