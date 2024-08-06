@@ -554,6 +554,7 @@ class PaymentREST(http.Controller):
             if payment_details:
                 return request.make_response(
                     json.dumps({
+                        'id': payment_details.id,
                         'transaction_id': payment_details.transaction_id,
                         'amount': payment_details.amount,
                         'currency': payment_details.currency,
