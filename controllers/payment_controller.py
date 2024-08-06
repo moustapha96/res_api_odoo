@@ -560,6 +560,10 @@ class PaymentREST(http.Controller):
                         'payment_method': payment_details.payment_method,
                         'payment_date': payment_details.payment_date.isoformat(),
                         'order_id': payment_details.order_id.id,
+                        'order':{
+                            'id' : payment_details.order_id.id,
+                            'name': payment_details.order_id.name
+                        }
                         'partner_id': payment_details.partner_id.id,
                         'partner_name': payment_details.partner_id.name,
                         'payment_token': payment_details.payment_token,
@@ -615,6 +619,10 @@ class PaymentREST(http.Controller):
                         'payment_method': payment_details.payment_method,
                         'payment_date': payment_details.payment_date.isoformat(),
                         'order_id': payment_details.order_id.id,
+                        'order':{
+                            'id' : payment_details.order_id.id,
+                            'name': payment_details.order_id.name
+                        }
                         'partner_id': payment_details.partner_id.id,
                         'partner_name': payment_details.partner_id.name,
                         'payment_token': payment_details.payment_token,
