@@ -614,12 +614,6 @@ class PaymentREST(http.Controller):
                     response=json.dumps(payment_details)
                 )
                 return resp
-            else:
-                return request.make_response(
-                    json.dumps({"error": "Payment details not found"}),
-                    status=400,
-                    headers={'Content-Type': 'application/json'}
-                )
 
         except Exception as e:
             return request.make_response(
