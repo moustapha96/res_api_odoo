@@ -493,7 +493,7 @@ class ControllerREST(http.Controller):
         city = data.get('city')
         phone = data.get('phone')
 
-        company = request.env['res.company'].sudo().search([('id', '=', 4)], limit=1)
+        company = request.env['res.company'].sudo().search([('id', '=', 1)], limit=1)
         country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
 
         partner_email = request.env['res.partner'].sudo().search([('email', '=', email)], limit=1)

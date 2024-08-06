@@ -223,7 +223,7 @@ class userREST(http.Controller):
 
         if data:
 
-            company = request.env['res.company'].sudo().search([('id', '=', 4)], limit=1)
+            company = request.env['res.company'].sudo().search([('id', '=', 1)], limit=1)
             country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
 
             # Création du partenaire
