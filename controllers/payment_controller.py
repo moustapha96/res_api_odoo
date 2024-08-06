@@ -591,8 +591,8 @@ class PaymentREST(http.Controller):
         try:
             # payment_details = request.env['payment.details'].sudo().get_payment_details(transaction)
             payments = request.env['payment.details'].sudo().search([('partner_id', '=', id)])
-            payment_details = []
             if payments:
+                payment_details = []
                 for p in payments:
                     payment_details.append({
                         'transaction_id': p.transaction_id,
@@ -615,13 +615,13 @@ class PaymentREST(http.Controller):
             else:
                 return request.make_response(
                     json.dumps({"error": "Payment details not found"}),
-                    status=404,
+                    status=400,
                     headers={'Content-Type': 'application/json'}
                 )
 
         except Exception as e:
             return request.make_response(
                 json.dumps({"error": str(e)}),
-                status=500,
+                status=400,
                 headers={'Content-Type': 'application/json'}
             )
