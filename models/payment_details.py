@@ -67,7 +67,7 @@ class PaymentDetails(models.Model):
     
     @api.model
     def get_payment_partner(self,partner_id):
-        payments = self.search([('partner_id', '=', partner_id)], limit=1)
+        payments = self.search([('partner_id.id', '=', partner_id)], limit=1)
         if payments:
             payment_details = []
             for p in payments:
