@@ -52,6 +52,10 @@ class PaymentDetails(models.Model):
                 'payment_method': payment_details.payment_method,
                 'payment_date': payment_details.payment_date,
                 'order_id': payment_details.order_id.id,
+                'order':{
+                            'id' : payment_details.order_id.id,
+                            'name': payment_details.order_id.name
+                },
                 'partner_id': payment_details.partner_id.id,
                 'partner_name': payment_details.partner_id.name,
                 'payment_token': payment_details.payment_token,
@@ -72,6 +76,10 @@ class PaymentDetails(models.Model):
                     'payment_method': p.payment_method,
                     'payment_date': p.payment_date.isoformat(),
                     'order_id': p.order_id.id,
+                    'order':{
+                            'id' : p.order_id.id,
+                            'name': p.order_id.name
+                    },
                     'partner_id': p.partner_id.id,
                     'partner_name': p.partner_id.name,
                     'payment_token': p.payment_token,
