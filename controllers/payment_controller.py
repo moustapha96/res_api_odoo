@@ -590,7 +590,7 @@ class PaymentREST(http.Controller):
     def get_payment_partner(self, id, **kw):
         try:
             # payment_details = request.env['payment.details'].sudo().get_payment_details(transaction)
-            payments = request.env['payment.details'].sudo().search([])
+            payments = request.env['payment.details'].sudo().search([('partner_id','=',id)])
             if payments:
                 payment_details = []
                 for p in payments:
