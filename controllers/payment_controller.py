@@ -511,7 +511,7 @@ class PaymentREST(http.Controller):
                     status=400,
                     headers={'Content-Type': 'application/json'}
                 )
-
+          
             payment_details = request.env['payment.details'].sudo().set_payment_details(
                 transaction_id=transaction_id,
                 amount=amount,
@@ -524,6 +524,7 @@ class PaymentREST(http.Controller):
 
             return request.make_response(
                 json.dumps({
+                        'id': payment_details.id,
                         'transaction_id': payment_details.transaction_id,
                         'amount': payment_details.amount,
                         'currency': payment_details.currency,
