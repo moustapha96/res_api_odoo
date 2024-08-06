@@ -500,13 +500,12 @@ class PaymentREST(http.Controller):
             transaction_id = data.get('transaction_id')
             amount = data.get('amount')
             order_id = data.get('order_id')
-            order_type = data.get('order_type')
             partner_id = data.get('partner_id')
             payment_token = data.get('payment_token')
             payment_state = data.get('payment_state')
             payment_date = datetime.datetime.now()
 
-            if not all([transaction_id, amount, order_id, order_type, partner_id]):
+            if not all([transaction_id, amount, order_id,  partner_id]):
                 return request.make_response(
                     json.dumps({"error": "Missing required fields"}),
                     status=400,
@@ -518,7 +517,6 @@ class PaymentREST(http.Controller):
                 amount=amount,
                 payment_date=payment_date,
                 order_id=order_id,
-                order_type=order_type,
                 partner_id=partner_id,
                 payment_token=payment_token,
                 payment_state=payment_state
@@ -531,8 +529,7 @@ class PaymentREST(http.Controller):
                         'currency': payment_details.currency,
                         'payment_method': payment_details.payment_method,
                         'payment_date': payment_details.payment_date.isoformat(),
-                        'order_id': payment_details.order_id,
-                        'order_type': payment_details.order_type,
+                        'order_id': payment_details.order_id.id,
                         'partner_id': payment_details.partner_id.id,
                         'partner_name': payment_details.partner_id.name,
                         'payment_token': payment_details.payment_token,
@@ -562,8 +559,7 @@ class PaymentREST(http.Controller):
                         'currency': payment_details.currency,
                         'payment_method': payment_details.payment_method,
                         'payment_date': payment_details.payment_date.isoformat(),
-                        'order_id': payment_details.order_id,
-                        'order_type': payment_details.order_type,
+                        'order_id': payment_details.order_id.id,
                         'partner_id': payment_details.partner_id.id,
                         'partner_name': payment_details.partner_id.name,
                         'payment_token': payment_details.payment_token,
