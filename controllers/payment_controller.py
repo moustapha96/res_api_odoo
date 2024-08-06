@@ -563,7 +563,7 @@ class PaymentREST(http.Controller):
                         'order':{
                             'id' : payment_details.order_id.id,
                             'name': payment_details.order_id.name
-                        }
+                        },
                         'partner_id': payment_details.partner_id.id,
                         'partner_name': payment_details.partner_id.name,
                         'payment_token': payment_details.payment_token,
@@ -622,7 +622,7 @@ class PaymentREST(http.Controller):
                         'order':{
                             'id' : payment_details.order_id.id,
                             'name': payment_details.order_id.name
-                        }
+                        },
                         'partner_id': payment_details.partner_id.id,
                         'partner_name': payment_details.partner_id.name,
                         'payment_token': payment_details.payment_token,
