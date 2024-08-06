@@ -600,3 +600,23 @@ class PaymentREST(http.Controller):
                 status=400,
                 headers={'Content-Type': 'application/json'}
             )
+
+
+    @http.route('/api/payment/byId/<id>', methods=['GET'], type='http', auth='none', cors='*')
+    def get_payment_by_id(self, id, **kw):
+        try:
+            payment_details = request.env['payment.details'].sudo().search([('id', '=', id)], limit=1)
+            resp = werkzeug.wrappers.Response(
+                status=200,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps(payment_details)
+            )
+            return resp
+
+        except Exception as e:
+            return request.make_response(
+                json.dumps({"error": str(e)}),
+                status=400,
+                headers={'Content-Type': 'application/json'}
+            )
