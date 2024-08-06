@@ -607,11 +607,13 @@ class PaymentREST(http.Controller):
                         'payment_token': p.payment_token,
                         'payment_state': p.payment_state,
                 })
-                return request.make_response(
-                    json.dumps(payment_details),
+                resp = werkzeug.wrappers.Response(
                     status=200,
-                    headers={'Content-Type': 'application/json'}
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                    response=json.dumps(payment_details)
                 )
+                return resp
             else:
                 return request.make_response(
                     json.dumps({"error": "Payment details not found"}),
