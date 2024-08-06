@@ -64,3 +64,26 @@ class PaymentDetails(models.Model):
                 'payment_state': payment_details.payment_state,
             }
         return None
+    
+    @api.model
+    def get_payment_partner(self,partner_id):
+        payments = self.search([('partner_id', '=', partner_id)], limit=1)
+        if payments:
+            payment_details = []
+            for p in payments:
+                payment_details.append({
+                    'transaction_id': p.transaction_id,
+                    'amount': p.amount,
+                    'currency': p.currency,
+                    'payment_method': p.payment_method,
+                    'payment_date': p.payment_date.isoformat(),
+                    'order_id': p.order_id,
+                    'order_type': p.order_type,
+                    'partner_id': p.partner_id.id,
+                    'partner_name': p.partner_id.name,
+                    'payment_token': p.payment_token,
+                    'payment_state': p.payment_state,
+            })
+            return payment_details
+        return []
+

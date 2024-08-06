@@ -589,31 +589,14 @@ class PaymentREST(http.Controller):
     @http.route('/api/payment/partner/<id>', methods=['GET'], type='http', auth='none', cors='*')
     def get_payment_partner(self, id, **kw):
         try:
-            # payment_details = request.env['payment.details'].sudo().get_payment_details(transaction)
-            payments = request.env['payment.details'].sudo().search([('partner_id','=',id)])
-            if payments:
-                payment_details = []
-                for p in payments:
-                    payment_details.append({
-                        'transaction_id': p.transaction_id,
-                        'amount': p.amount,
-                        'currency': p.currency,
-                        'payment_method': p.payment_method,
-                        'payment_date': p.payment_date.isoformat(),
-                        'order_id': p.order_id,
-                        'order_type': p.order_type,
-                        'partner_id': p.partner_id.id,
-                        'partner_name': p.partner_id.name,
-                        'payment_token': p.payment_token,
-                        'payment_state': p.payment_state,
-                })
-                resp = werkzeug.wrappers.Response(
-                    status=200,
-                    content_type='application/json; charset=utf-8',
-                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                    response=json.dumps(payment_details)
-                )
-                return resp
+            payment_details = request.env['payment.details'].sudo().get_payment_partner(id)
+            resp = werkzeug.wrappers.Response(
+                status=200,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps(payment_details)
+            )
+            return resp
 
         except Exception as e:
             return request.make_response(
