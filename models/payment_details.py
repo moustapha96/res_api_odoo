@@ -28,7 +28,7 @@ class PaymentDetails(models.Model):
     @api.model
     def set_payment_details(self, transaction_id, amount,  payment_date, order_id,  partner_id, payment_token, payment_state):
         # Enregistrer les détails du paiement
-        self.create({
+        p = self.create({
             'transaction_id': transaction_id,
             'amount': amount,
             'currency': 'XOF',
@@ -39,6 +39,7 @@ class PaymentDetails(models.Model):
             'payment_token': payment_token,
             'payment_state': payment_state,
         })
+        return p
 
     @api.model
     def get_payment_details(self, transaction_id):
