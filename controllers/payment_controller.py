@@ -606,13 +606,23 @@ class PaymentREST(http.Controller):
     def get_payment_by_id(self, id, **kw):
         try:
             payment_details = request.env['payment.details'].sudo().search([('id', '=', id)], limit=1)
-            resp = werkzeug.wrappers.Response(
-                status=200,
-                content_type='application/json; charset=utf-8',
-                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                response=json.dumps(payment_details)
-            )
-            return resp
+            return request.make_response(
+                    json.dumps({
+                        'id': payment_details.id,
+                        'transaction_id': payment_details.transaction_id,
+                        'amount': payment_details.amount,
+                        'currency': payment_details.currency,
+                        'payment_method': payment_details.payment_method,
+                        'payment_date': payment_details.payment_date.isoformat(),
+                        'order_id': payment_details.order_id.id,
+                        'partner_id': payment_details.partner_id.id,
+                        'partner_name': payment_details.partner_id.name,
+                        'payment_token': payment_details.payment_token,
+                        'payment_state': payment_details.payment_state,
+                    }),
+                    status=200,
+                    headers={'Content-Type': 'application/json'}
+                )
 
         except Exception as e:
             return request.make_response(
