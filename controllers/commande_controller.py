@@ -203,7 +203,7 @@ class CommandeREST(http.Controller):
             })
 
         # if order:
-            order.action_confirm()
+            # order.action_confirm()
         resp = werkzeug.wrappers.Response(
             status=201,
             content_type='application/json; charset=utf-8',
