@@ -75,7 +75,7 @@ class userREST(http.Controller):
                                                     Votre identifiant est <strong>{user.email}</strong><br/>
                                                     Pour accéder à votre compte, vous pouvez utiliser le lien suivant :
                                                     <div style="margin: 16px 0px 16px 0px;">
-                                                        <a style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;" href="http://localhost:5173/login?mail={user.email}&isVerified=1&token={user.id}">
+                                                        <a style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;" href="http://orbitcity.sn/login?mail={user.email}&isVerified=1&token={user.id}">
                                                             Aller à Mon compte
                                                         </a>
                                                     </div>
