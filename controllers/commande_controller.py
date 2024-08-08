@@ -451,17 +451,17 @@ class CommandeREST(http.Controller):
                     headers={'Content-Type': 'application/json'}
                 )
 
-
+            res_cancel = order.action_cancel()
             # Supprimer la commande
-            order.action_cancel()
-            # order.unlink()
-            return request.make_response(
-                json.dumps({
-                    'id': id,
-                    'message': 'Commande supprimée avec succès'
-                }),
-                headers={'Content-Type': 'application/json'}
-            )
+            if  res_cancel:
+                order.unlink()
+                return request.make_response(
+                    json.dumps({
+                        'id': id,
+                        'message': 'Commande supprimée avec succès'
+                    }),
+                    headers={'Content-Type': 'application/json'}
+                )
 
         except ValueError as e:
             return request.make_response(
