@@ -330,10 +330,10 @@ class PaymentREST(http.Controller):
                     'payment_id': account_payment.id,
                 })
                 if new_invoice:
-                    account_payment.write({
-                        'is_reconciled': True,
-                        'move_id': new_invoice.id
-                    })
+                    # account_payment.write({
+                    #     'is_reconciled': True,
+                    #     'move_id': new_invoice.id
+                    # })
                 # Création des lignes de facture
                 # for order_line in order_lines:
                 #     product_id = order_line.product_id.id
