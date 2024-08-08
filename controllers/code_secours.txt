@@ -291,20 +291,12 @@ class PaymentREST(http.Controller):
                     'sale_id': order.id,
                 })
                 if account_payment:
-                    account_payment.action_post()
-                    invoice_provided_payment = account_payment.move_id
-                    invoice_provided_payment.write({
-                        'move_type': 'out_invoice',
-                        'amount_total' : order.amount_total,
-                        'invoice_date': datetime.datetime.now() ,
-                        'invoice_date_due': datetime.datetime.now(),
-                        'invoice_line_ids': [],
-                        'ref': 'Facture '+ order.name,
-                        'state' : 'posted',
-                        'invoice_origin': order.name,
-                        'payment_state': 'paid',
-                    })
+                    # account_payment.action_post()
                     order.action_confirm()
+                    # new_invoice.write({
+                    #     'payment_id': account_payment.id,
+                    #     'payment_state': 'paid',
+                    # })
                     # account_payment.write({
                     #     'is_reconciled': True,
                     #     # 'move_id': new_invoice.id
@@ -313,51 +305,51 @@ class PaymentREST(http.Controller):
                     # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
                 # Création de la facture
             
-            # if order and account_payment:
-            #     # order.action_confirm()
-            #     order_lines = request.env['sale.order.line'].sudo().search([('order_id','=', order.id ) ])
-            #     invoice_lines = []
+            if order and account_payment:
+                # order.action_confirm()
+                order_lines = request.env['sale.order.line'].sudo().search([('order_id','=', order.id ) ])
+                invoice_lines = []
 
-            #     # new_invoice.action_post()
-            #     # Création de la facture
-            #     # new_invoice = request.env['account.move'].sudo().create({
-            #     #     'move_type': 'out_invoice',
-            #     #     'amount_total' : order.amount_total,
-            #     #     'invoice_date': datetime.datetime.now() ,
-            #     #     'invoice_date_due': datetime.datetime.now(),
-            #     #     'invoice_line_ids': [],
-            #     #     'ref': 'Facture '+ order.name,
-            #     #     'journal_id': journal.id,
-            #     #     'partner_id': partner.id,
-            #     #     'company_id':company.id,
-            #     #     'currency_id': partner.currency_id.id,
-            #     #     'payment_id': account_payment.id,
-            #     # })
-            #     # if new_invoice:
-            #         # account_payment.write({
-            #         #     'is_reconciled': True,
-            #         #     'move_id': new_invoice.id
-            #         # })
-            #     # Création des lignes de facture
-            #     # for order_line in order_lines:
-            #     #     product_id = order_line.product_id.id
-            #     #     quantity = order_line.product_uom_qty
-            #     #     price_unit = order_line.price_unit
+                # new_invoice.action_post()
+                # Création de la facture
+                new_invoice = request.env['account.move'].sudo().create({
+                    'move_type': 'out_invoice',
+                    'amount_total' : order.amount_total,
+                    'invoice_date': datetime.datetime.now() ,
+                    'invoice_date_due': datetime.datetime.now(),
+                    'invoice_line_ids': [],
+                    'ref': 'Facture '+ order.name,
+                    'journal_id': journal.id,
+                    'partner_id': partner.id,
+                    'company_id':company.id,
+                    'currency_id': partner.currency_id.id,
+                    'payment_id': account_payment.id,
+                })
+                if new_invoice:
+                    # account_payment.write({
+                    #     'is_reconciled': True,
+                    #     'move_id': new_invoice.id
+                    # })
+                # Création des lignes de facture
+                # for order_line in order_lines:
+                #     product_id = order_line.product_id.id
+                #     quantity = order_line.product_uom_qty
+                #     price_unit = order_line.price_unit
 
-            #     #     invoice_line = request.env['account.move.line'].sudo().create({
-            #     #         'move_id': new_invoice.id,
-            #     #         'product_id': product_id,
-            #     #         'quantity': quantity,
-            #     #         'price_unit': price_unit,
-            #     #         'company_id': company.id,
-            #     #         'currency_id': company.currency_id.id,
-            #     #         'partner_id': partner.id,
-            #     #         'ref': 'Facture ' + order.name,
-            #     #         'journal_id':journal.id,
-            #     #         'name': order.name,
-            #     #     })
-            #     # new_invoice.action_post()
-                return request.make_response(
+                #     invoice_line = request.env['account.move.line'].sudo().create({
+                #         'move_id': new_invoice.id,
+                #         'product_id': product_id,
+                #         'quantity': quantity,
+                #         'price_unit': price_unit,
+                #         'company_id': company.id,
+                #         'currency_id': company.currency_id.id,
+                #         'partner_id': partner.id,
+                #         'ref': 'Facture ' + order.name,
+                #         'journal_id':journal.id,
+                #         'name': order.name,
+                #     })
+                # new_invoice.action_post()
+                    return request.make_response(
                         json.dumps({
                             'id': order.id,
                             'name': order.name,
