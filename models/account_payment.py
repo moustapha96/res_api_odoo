@@ -57,7 +57,7 @@ class AccountPayment(models.Model):
             # Lier le paiement à la facture
             payment.write({
                 'move_id': new_invoice.id,
-                'invoice_ids': [(4, new_invoice.id)],
+                # 'invoice_ids': [(4, new_invoice.id)],
             })
 
         order.action_confirm()
