@@ -451,9 +451,10 @@ class CommandeREST(http.Controller):
                     headers={'Content-Type': 'application/json'}
                 )
 
+
             # Supprimer la commande
-            if order.action_cancel():
-                order.unlink()
+            order.action_cancel()
+            order.unlink()
             return request.make_response(
                 json.dumps({
                     'id': id,
