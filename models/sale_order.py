@@ -27,18 +27,18 @@ class SaleOrder(models.Model):
     #     order = super(SaleOrder, self).create(vals)
     #     order.create_invoice()
     #     return order
-    def action_confirm(self):
-        res = super(SaleOrder, self).action_confirm()
-        self._link_payment_to_invoice()
-        return res
+    # def action_confirm(self):
+    #     res = super(SaleOrder, self).action_confirm()
+    #     self._link_payment_to_invoice()
+    #     return res
 
-    def _link_payment_to_invoice(self):
-        for order in self:
-            payment = self.env['account.payment'].sudo().search([('sale_id', '=', order.id)], limit=1)
-            if payment:
-                invoice = self.env['account.move'].sudo().search([('sale_id', '=', order.id)], limit=1)
-                if invoice:
-                    payment.write({
-                        'move_id': invoice.id,
-                        # 'invoice_ids': [(4, invoice.id)],
-                    })
+    # def _link_payment_to_invoice(self):
+    #     for order in self:
+    #         payment = self.env['account.payment'].sudo().search([('sale_id', '=', order.id)], limit=1)
+    #         if payment:
+    #             invoice = self.env['account.move'].sudo().search([('sale_id', '=', order.id)], limit=1)
+    #             if invoice:
+    #                 payment.write({
+    #                     'move_id': invoice.id,
+    #                     # 'invoice_ids': [(4, invoice.id)],
+    #                 })
