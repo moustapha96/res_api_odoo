@@ -318,7 +318,7 @@ class PaymentREST(http.Controller):
 
             # enregistrement payment
             if order :
-                order.action_confirm()
+
                 order.write({
                     'invoice_status':  'invoiced',
                     # 'state': 'sale'
@@ -347,6 +347,7 @@ class PaymentREST(http.Controller):
                 # })
                 if account_payment:
                     account_payment.action_post()
+                    order.action_confirm()
                     # new_invoice.write({
                     #     'payment_id': account_payment.id,
                     #     'payment_state': 'paid',
