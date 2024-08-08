@@ -329,7 +329,7 @@ class PaymentREST(http.Controller):
                         # new_invoice.action_post()
                     # order.action_confirm()
                      # Création automatique de la facture et liaison du paiement
-                    order._create_and_link_invoice(account_payment, order)
+                    order.action_confirm()
                   
                     # Reconcilier le paiement avec la facture
                     # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
