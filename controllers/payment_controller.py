@@ -326,7 +326,7 @@ class PaymentREST(http.Controller):
                                 'currency_id': company.currency_id.id,
                                 'partner_id': partner.id,
                                 'ref': 'Facture ' + order.name,
-                                'journal_id':journal.id,
+                                'journal_id': journal_facture.id,
                                 'name': order.name,
                             })
 
