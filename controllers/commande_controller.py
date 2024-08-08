@@ -451,6 +451,7 @@ class CommandeREST(http.Controller):
                     headers={'Content-Type': 'application/json'}
                 )
 
+            order.write({'state': 'cancel'})
             res_cancel = order.action_cancel()
             # Supprimer la commande
             if  res_cancel:
