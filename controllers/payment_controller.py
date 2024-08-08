@@ -275,27 +275,65 @@ class PaymentREST(http.Controller):
                 admin_user = request.env.ref('base.user_admin')
                 request.env = request.env(user=admin_user.id)
 
-            # Création de la facture
-            if order:
+
+            # enregistrement payment
+            if order :
+
+                # order.write({
+                #     'invoice_status':  'invoiced',
+                #     # 'state': 'sale'
+                # })
+                account_payment = request.env['account.payment'].sudo().create({
+                    'payment_type': 'inbound',
+                    'partner_type': 'customer',
+                    'partner_id': partner.id,
+                    'amount': order.amount_total,
+                    'journal_id': journal.id,
+                    'currency_id': journal.currency_id.id, #42
+                    'payment_method_line_id': 1,
+                    'payment_method_id': payment_method.id, # inbound
+                    'sale_id': order.id,
+                })
+                if account_payment:
+                    # account_payment.action_post()
+                    order.action_confirm()
+                    # new_invoice.write({
+                    #     'payment_id': account_payment.id,
+                    #     'payment_state': 'paid',
+                    # })
+                    # account_payment.write({
+                    #     'is_reconciled': True,
+                    #     # 'move_id': new_invoice.id
+                    # })
+                    # Reconcilier le paiement avec la facture
+                    # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
+                # Création de la facture
+            
+            if order and account_payment:
                 # order.action_confirm()
                 order_lines = request.env['sale.order.line'].sudo().search([('order_id','=', order.id ) ])
                 invoice_lines = []
 
                 # new_invoice.action_post()
-
                 # Création de la facture
-                # new_invoice = request.env['account.move'].sudo().create({
-                #     'move_type': 'out_invoice',
-                #     'amount_total' : order.amount_total,
-                #     'invoice_date': datetime.datetime.now() ,
-                #     'invoice_date_due': datetime.datetime.now(),
-                #     'invoice_line_ids': [],
-                #     'ref': 'Facture '+ order.name,
-                #     'journal_id': journal.id,
-                #     'partner_id': partner.id,
-                #     'company_id':company.id,
-                #     'currency_id': partner.currency_id.id,
-                # })
+                new_invoice = request.env['account.move'].sudo().create({
+                    'move_type': 'out_invoice',
+                    'amount_total' : order.amount_total,
+                    'invoice_date': datetime.datetime.now() ,
+                    'invoice_date_due': datetime.datetime.now(),
+                    'invoice_line_ids': [],
+                    'ref': 'Facture '+ order.name,
+                    'journal_id': journal.id,
+                    'partner_id': partner.id,
+                    'company_id':company.id,
+                    'currency_id': partner.currency_id.id,
+                    'payment_id': account_payment.id,
+                })
+                if new_invoice:
+                    account_payment.write({
+                        'is_reconciled': True,
+                        'move_id': new_invoice.id
+                    })
                 # Création des lignes de facture
                 # for order_line in order_lines:
                 #     product_id = order_line.product_id.id
@@ -315,72 +353,28 @@ class PaymentREST(http.Controller):
                 #         'name': order.name,
                 #     })
                 # new_invoice.action_post()
-
-            # enregistrement payment
-            if order :
-
-                order.write({
-                    'invoice_status':  'invoiced',
-                    # 'state': 'sale'
-                })
-                account_payment = request.env['account.payment'].sudo().create({
-                    'payment_type': 'inbound',
-                    'partner_type': 'customer',
-                    'partner_id': partner.id,
-                    'amount': order.amount_total,
-                    'journal_id': journal.id,
-                    'currency_id': journal.currency_id.id, #42
-                    'payment_method_line_id': 1,
-                    'payment_method_id': payment_method.id, # inbound
-                    'sale_id': order.id,
-                })
-                # account_payment = request.env['account.payment'].sudo().create({
-                #     'payment_type': 'inbound',
-                #     'partner_type': 'customer',
-                #     'partner_id': partner.id,
-                #     'amount': order.amount_total,
-                #     'journal_id': new_invoice.journal_id.id,
-                #     'currency_id': new_invoice.currency_id.id, #42
-                #     'payment_method_line_id': 1,
-                #     'payment_method_id': payment_method.id, # inbound
-                #     'sale_id': order.id,
-                # })
-                if account_payment:
-                    account_payment.action_post()
-                    order.action_confirm()
-                    # new_invoice.write({
-                    #     'payment_id': account_payment.id,
-                    #     'payment_state': 'paid',
-                    # })
-                    # account_payment.write({
-                    #     'is_reconciled': True,
-                    #     # 'move_id': new_invoice.id
-                    # })
-                    # Reconcilier le paiement avec la facture
-                    # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
-
-                    return request.make_response(
-                            json.dumps({
-                                'id': order.id,
-                                'name': order.name,
-                                'partner_id': order.partner_id.id,
-                                'type_sale': order.type_sale,
-                                'currency_id': order.currency_id.id,
-                                'company_id': order.company_id.id,
-                                # 'commitment_date': order.commitment_date.isoformat(),
-                                'state': order.state,
-                                'amount_total': order.amount_total,
-                                # 'invoice_id': account_payment.move_id.id or None ,
-                                # 'is_reconciled': account_payment.is_reconciled,
-                                # 'payment_id': account_payment.id,
-                                # 'payment_name': account_payment.name,
-                                # 'sale_order': account_payment.sale_id.id,
-                                # 'move_id': account_payment.move_id.id,
-                                # 'move_name': account_payment.move_id.name,
-                                'invoice_status': order.invoice_status
-                            }),
-                            headers={'Content-Type': 'application/json'}
-                        )
+                return request.make_response(
+                        json.dumps({
+                            'id': order.id,
+                            'name': order.name,
+                            'partner_id': order.partner_id.id,
+                            'type_sale': order.type_sale,
+                            'currency_id': order.currency_id.id,
+                            'company_id': order.company_id.id,
+                            # 'commitment_date': order.commitment_date.isoformat(),
+                            'state': order.state,
+                            'amount_total': order.amount_total,
+                            # 'invoice_id': account_payment.move_id.id or None ,
+                            # 'is_reconciled': account_payment.is_reconciled,
+                            # 'payment_id': account_payment.id,
+                            # 'payment_name': account_payment.name,
+                            # 'sale_order': account_payment.sale_id.id,
+                            # 'move_id': account_payment.move_id.id,
+                            # 'move_name': account_payment.move_id.name,
+                            'invoice_status': order.invoice_status
+                        }),
+                        headers={'Content-Type': 'application/json'}
+                    )
             else:
                 return request.make_response(
                             json.dumps({'erreur': 'precommande non trouvé' }),
