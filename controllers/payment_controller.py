@@ -353,7 +353,7 @@ class PaymentREST(http.Controller):
                 #         'name': order.name,
                 #     })
                 # new_invoice.action_post()
-                return request.make_response(
+                    return request.make_response(
                         json.dumps({
                             'id': order.id,
                             'name': order.name,
