@@ -306,7 +306,7 @@ class PaymentREST(http.Controller):
                         'partner_id': partner.id,
                         'company_id':company.id,
                         'currency_id': partner.currency_id.id,
-                        'payment_id': account_payment.id,
+                        # 'payment_id': account_payment.id,
                         'sale_id': order.id
                     })
                     if new_invoice:
