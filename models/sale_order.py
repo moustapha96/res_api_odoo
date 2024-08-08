@@ -40,5 +40,5 @@ class SaleOrder(models.Model):
                 if invoice:
                     payment.write({
                         'move_id': invoice.id,
-                        'invoice_ids': [(4, invoice.id)],
+                        # 'invoice_ids': [(4, invoice.id)],
                     })
