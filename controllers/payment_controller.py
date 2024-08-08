@@ -275,11 +275,6 @@ class PaymentREST(http.Controller):
 
             # enregistrement payment
             if order :
-
-                # order.write({
-                #     'invoice_status':  'invoiced',
-                #     # 'state': 'sale'
-                # })
                 account_payment = request.env['account.payment'].sudo().create({
                     'payment_type': 'inbound',
                     'partner_type': 'customer',
@@ -293,7 +288,7 @@ class PaymentREST(http.Controller):
                 })
                 if account_payment:
                     account_payment.action_post()
-                   
+
                     # Création de la facture
                     # new_invoice = request.env['account.move'].sudo().create({
                     #     'move_type': 'out_invoice',
@@ -332,7 +327,9 @@ class PaymentREST(http.Controller):
 
 
                         # new_invoice.action_post()
-                    order.action_confirm()
+                    # order.action_confirm()
+                     # Création automatique de la facture et liaison du paiement
+                    order._create_and_link_invoice(account_payment, order)
                   
                     # Reconcilier le paiement avec la facture
                     # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
