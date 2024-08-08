@@ -318,9 +318,10 @@ class PaymentREST(http.Controller):
 
             # enregistrement payment
             if order :
+                order.action_confirm()
                 order.write({
                     'invoice_status':  'invoiced',
-                    'state': 'sale'
+                    # 'state': 'sale'
                 })
                 account_payment = request.env['account.payment'].sudo().create({
                     'payment_type': 'inbound',
