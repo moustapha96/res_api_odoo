@@ -454,7 +454,7 @@ class CommandeREST(http.Controller):
 
             # Supprimer la commande
             order.action_cancel()
-            order.unlink()
+            # order.unlink()
             return request.make_response(
                 json.dumps({
                     'id': id,
