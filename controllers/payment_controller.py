@@ -256,6 +256,7 @@ class PaymentREST(http.Controller):
             _logger.info(f'partner {partner.email} ')
             _logger.info(f'company {company.name} ')
 
+            journal_facture = request.env['account.journal'].sudo().search([('id', '=', 1) ], limit=1)
             journal = request.env['account.journal'].sudo().search([('id', '=', 6) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
             # sur le vps : le journal pour CASH est 6
             # journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
@@ -292,23 +293,28 @@ class PaymentREST(http.Controller):
                 })
                 if account_payment:
                     account_payment.action_post()
-                    invoice_provided_payment = account_payment.move_id
-                    invoice_provided_payment.write({
+                   
+                    # Création de la facture
+                    new_invoice = request.env['account.move'].sudo().create({
                         'move_type': 'out_invoice',
                         'amount_total' : order.amount_total,
                         'invoice_date': datetime.datetime.now() ,
                         'invoice_date_due': datetime.datetime.now(),
                         'invoice_line_ids': [],
                         'ref': 'Facture '+ order.name,
-                        'state' : 'posted',
-                        'invoice_origin': order.name,
-                        'payment_state': 'paid',
+                        'journal_id': journal_facture.id,
+                        'partner_id': partner.id,
+                        'company_id':company.id,
+                        'currency_id': partner.currency_id.id,
+                        'payment_id': account_payment.id,
+                        'sale_id': order.id
                     })
+                    if new_invoice:
+                        new_invoice.action_post()
+
+
                     order.action_confirm()
-                    # account_payment.write({
-                    #     'is_reconciled': True,
-                    #     # 'move_id': new_invoice.id
-                    # })
+                  
                     # Reconcilier le paiement avec la facture
                     # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
                 # Création de la facture
