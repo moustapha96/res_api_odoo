@@ -320,7 +320,7 @@ class PaymentREST(http.Controller):
             if order :
                 order.write({
                     'invoice_status':  'invoiced',
-                    # 'state': 'sale'
+                    'state': 'sale'
                 })
                 account_payment = request.env['account.payment'].sudo().create({
                     'payment_type': 'inbound',
