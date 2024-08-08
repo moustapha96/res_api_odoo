@@ -277,7 +277,7 @@ class PaymentREST(http.Controller):
 
             # Création de la facture
             if order:
-                # order.action_confirm()
+                order.action_confirm()
                 order_lines = request.env['sale.order.line'].sudo().search([('order_id','=', order.id ) ])
                 invoice_lines = []
 
