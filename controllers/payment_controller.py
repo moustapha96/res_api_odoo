@@ -266,10 +266,10 @@ class PaymentREST(http.Controller):
 
             _logger.info(f'journal {journal} ')
             _logger.info(f'journal {payment_method} ')
-            if order:
-                order.write({
-                    'state': 'sale'
-                })
+            # if order:
+            #     order.write({
+            #         'state': 'sale'
+            #     })
             user = request.env['res.users'].sudo().browse(request.env.uid)
             if not user or user._is_public():
                 admin_user = request.env.ref('base.user_admin')
