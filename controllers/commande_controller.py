@@ -439,3 +439,29 @@ class CommandeREST(http.Controller):
             headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
             response=json.dumps("Commande non trouvée")
         )
+    
+
+    @http.route('/api/commande/<id>/delete', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
+    def api_delete_order(self, id):
+        try:
+            order = request.env['sale.order'].sudo().search([('id', '=', id)], limit=1)
+            if not order:
+                return request.make_response(
+                    json.dumps({'erreur': 'Commande non trouvée'}),
+                    headers={'Content-Type': 'application/json'}
+                )
+
+            # Supprimer la commande
+            order.unlink()
+            return request.make_response(
+                json.dumps({
+                    'id': id,
+                    'message': 'Commande supprimée avec succès'
+                }),
+                headers={'Content-Type': 'application/json'}
+            )
+
+        except ValueError as e:
+            return request.make_response(
+                json.dumps({'status': 'error', 'message': str(e)}),
+                headers={'Content-Type': 'application/json'})
