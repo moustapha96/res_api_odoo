@@ -59,7 +59,7 @@ class ResetPasswordREST(http.Controller):
                     'signup_token': None,
                     'signup_expiration': None,
                 })
-                user.write({'password': password})
+                user._set_password(password)
                 return werkzeug.wrappers.Response(
                     status=200,
                     content_type='application/json; charset=utf-8',
