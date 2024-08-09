@@ -150,6 +150,18 @@ class userREST(http.Controller):
             _logger.error(f'Error sending email: {str(e)}')
             return {'status': 'error', 'message': str(e)}
 
+
+
+    def send_mail_reset_passwor(self , email):
+        user = request.env['res.users'].sudo().search([('email','=',email)])
+        if user:
+            token = self.generate_token()
+            user.write({'reset_password_token': token})
+
+        
+
+
+        
     @http.route('/api/users/<id>', methods=['GET'], type='http', auth='none', cors="*")
     def api_users_GET(self, id , **kw):
         if id:

@@ -728,3 +728,4 @@ else:
         from . import payment_controller
         from . import journal_currency_controller
         from . import mailer_controller
+        from . import reset_password_controller
