@@ -15,7 +15,7 @@ class userREST(http.Controller):
     def get_verification_status(self, email):
         # Récupérer la valeur de isVerified depuis ir.config_parameter
         return request.env['ir.config_parameter'].sudo().get_param(f'user_verification_{email}')
-    
+
     def set_user_avatar(self, email, avatar):
         # Stocker la valeur de isVerified dans ir.config_parameter
         request.env['ir.config_parameter'].sudo().set_param(f'user_avatar_{email}', avatar)
@@ -152,16 +152,6 @@ class userREST(http.Controller):
 
 
 
-    def send_mail_reset_passwor(self , email):
-        user = request.env['res.users'].sudo().search([('email','=',email)])
-        if user:
-            token = self.generate_token()
-            user.write({'reset_password_token': token})
-
-        
-
-
-        
     @http.route('/api/users/<id>', methods=['GET'], type='http', auth='none', cors="*")
     def api_users_GET(self, id , **kw):
         if id:
