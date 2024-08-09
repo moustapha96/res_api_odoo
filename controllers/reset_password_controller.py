@@ -46,7 +46,7 @@ class ResetPasswordREST(http.Controller):
         try:
             user = request.env['res.users'].sudo().search([('email', '=', email)], limit=1)
             partner = request.env['res.partner'].sudo().search([('signup_token', '=', token)], limit=1)
-            if not partner and not user:
+            if partner and user:
                 if partner.signup_expiration > datetime.datetime.now():
                     return werkzeug.wrappers.Response(
                         status=400,
