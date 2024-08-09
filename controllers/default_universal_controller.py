@@ -322,6 +322,7 @@ class ControllerREST(http.Controller):
                 'sale_ok': p.sale_ok,
                 'standard_price': p.standard_price,
                 'active': p.active,
+                'is_preorder': p.product_tmpl_id.is_preorder
             })
 
             resp = werkzeug.wrappers.Response(
@@ -361,6 +362,7 @@ class ControllerREST(http.Controller):
                 'standard_price': p.standard_price,
                 'active': p.active,
                 'en_promo' : p.product_tmpl_id.en_promo,
+                'is_preorder': p.product_tmpl_id.is_preorder
             }
 
             resp = werkzeug.wrappers.Response(
@@ -406,6 +408,7 @@ class ControllerREST(http.Controller):
                 'standard_price': p.standard_price,
                 'active': p.active,
                 'en_promo' : p.product_tmpl_id.en_promo,
+                'is_preorder': p.product_tmpl_id.is_preorder
             })
         resp = werkzeug.wrappers.Response(
                 status=200,
