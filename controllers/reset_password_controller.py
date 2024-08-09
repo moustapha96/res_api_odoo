@@ -59,13 +59,27 @@ class ResetPasswordREST(http.Controller):
                     'signup_token': None,
                     'signup_expiration': None,
                 })
-                user._set_password(password)
-                return werkzeug.wrappers.Response(
-                    status=200,
-                    content_type='application/json; charset=utf-8',
-                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                    response=json.dumps({'status': 'success', 'message': f'Le mot de passe a été réinitialisé avec succès'})
-                )
+                # user._set_password(password)
+                new_passwd = password.strip()
+                if not new_passwd:
+
+                    return werkzeug.wrappers.Response(
+                        status=200,
+                        content_type='application/json; charset=utf-8',
+                        headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                        response=json.dumps({'status': 'error', 'message': f'"Setting empty passwords is not allowed for security reasons!"'})
+                    )
+                res_user = user.write({
+                    'password': new_passwd
+                })
+                # user._password_changed = True
+                if res_user:
+                    return werkzeug.wrappers.Response(
+                        status=200,
+                        content_type='application/json; charset=utf-8',
+                        headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                        response=json.dumps({'status': 'success', 'message': f'Le mot de passe a été réinitialisé avec succès'})
+                    )
 
         except Exception as e:
             _logger.error(f'Erreur lors de la réinitialisation du mot de passe: {str(e)}')
