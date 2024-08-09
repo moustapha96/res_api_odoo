@@ -28,7 +28,7 @@ class ResetPasswordREST(http.Controller):
         token = token[:16]
         return token
 
-    @http.route('/api/users/new-password', methods=['POST'], type='json', auth='none', cors='*', csrf=False)
+    @http.route('/api/new-password', methods=['POST'], type='json', auth='none', cors='*', csrf=False)
     def reset_password(self, **kwargs):
         data = json.loads(request.httprequest.data)
         email = int( data.get('email'))
