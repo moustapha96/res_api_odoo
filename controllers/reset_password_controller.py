@@ -31,7 +31,7 @@ class ResetPasswordREST(http.Controller):
     @http.route('/api/new-password', methods=['POST'], type='json', auth='none', cors='*', csrf=False)
     def reset_password(self, **kwargs):
         data = json.loads(request.httprequest.data)
-        email = int( data.get('email'))
+        email = data.get('email')
         password = data.get('password')
         token = data.get('token')
 
@@ -75,7 +75,6 @@ class ResetPasswordREST(http.Controller):
                     headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
                     response=json.dumps({'status': 'error', 'message': str(e)})
                 )
-
 
 
     @http.route('/api/reset-password/<email>', methods=['GET'], type='http', auth='none', cors='*', csrf=False)
