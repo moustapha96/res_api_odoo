@@ -322,7 +322,9 @@ class ControllerREST(http.Controller):
                 'sale_ok': p.sale_ok,
                 'standard_price': p.standard_price,
                 'active': p.active,
-                'is_preorder': p.product_tmpl_id.is_preorder
+                'is_preorder': p.product_tmpl_id.is_preorder,
+                'preorder_price': p.product_tmpl_id.preorder_price,
+                'ttc_price': p.product_tmpl_id.ttc_price
             })
 
             resp = werkzeug.wrappers.Response(
@@ -362,7 +364,9 @@ class ControllerREST(http.Controller):
                 'standard_price': p.standard_price,
                 'active': p.active,
                 'en_promo' : p.product_tmpl_id.en_promo,
-                'is_preorder': p.product_tmpl_id.is_preorder
+                'is_preorder': p.product_tmpl_id.is_preorder,
+                'preorder_price': p.product_tmpl_id.preorder_price,
+                'ttc_price': p.product_tmpl_id.ttc_price
             }
 
             resp = werkzeug.wrappers.Response(
@@ -408,7 +412,9 @@ class ControllerREST(http.Controller):
                 'standard_price': p.standard_price,
                 'active': p.active,
                 'en_promo' : p.product_tmpl_id.en_promo,
-                'is_preorder': p.product_tmpl_id.is_preorder
+                'is_preorder': p.product_tmpl_id.is_preorder,
+                'preorder_price': p.product_tmpl_id.preorder_price,
+                'ttc_price': p.product_tmpl_id.ttc_price
             })
         resp = werkzeug.wrappers.Response(
                 status=200,
@@ -476,7 +482,7 @@ class ControllerREST(http.Controller):
                 content_type='application/json; charset=utf-8',
                 headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
                 response=json.dumps("Erreur lors de la reccuperation des pays"))
-    
+
 
     @http.route('/api/new_compte',  methods=['POST'] , type='http', auth='none' , cors="*" , csrf=False )
     def api_new_compte_post(self, **kw):

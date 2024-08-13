@@ -3,19 +3,126 @@ from .main import *
 import pdb
 import datetime
 
-from odoo import http
+from odoo import http, models, api, fields , tools, SUPERUSER_ID, _, Command
 from odoo.http import request
 import werkzeug
 import json
 import logging
 import random
+from odoo.exceptions import AccessDenied, AccessError, UserError, ValidationError
+import time
+
+from functools import wraps
 
 _logger = logging.getLogger(__name__)
 
 
+def _jsonable(o):
+    try: json.dumps(o)
+    except TypeError: return False
+    else: return True
+
+def check_identity(fn):
+    """ Wrapped method should be an *action method* (called from a button
+    type=object), and requires extra security to be executed. This decorator
+    checks if the identity (password) has been checked in the last 10mn, and
+    pops up an identity check wizard if not.
+
+    Prevents access outside of interactive contexts (aka with a request)
+    """
+    @wraps(fn)
+    def wrapped(self):
+        if not request:
+            raise UserError(_("This method can only be accessed over HTTP"))
+
+        if request.session.get('identity-check-last', 0) > time.time() - 10 * 60:
+            # update identity-check-last like github?
+            return fn(self)
+
+        w = self.sudo().env['res.users.identitycheck'].create({
+            'request': json.dumps([
+                { # strip non-jsonable keys (e.g. mapped to recordsets like binary_field_real_user)
+                    k: v for k, v in self.env.context.items()
+                    if _jsonable(v)
+                },
+                self._name,
+                self.ids,
+                fn.__name__
+            ])
+        })
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'res.users.identitycheck',
+            'res_id': w.id,
+            'name': _("Security Control"),
+            'target': 'new',
+            'views': [(False, 'form')],
+        }
+    wrapped.__has_check_identity = True
+    return wrapped
+
+
+class ChangePasswordWizard(models.TransientModel):
+    _name = "change.password.wizard"
+    _description = "Change Password Wizard"
+
+    def _default_user_ids(self):
+        user_ids = self._context.get('active_model') == 'res.users' and self._context.get('active_ids') or []
+        return [
+            Command.create({'user_id': user.id, 'user_login': user.login})
+            for user in self.env['res.users'].browse(user_ids)
+        ]
+
+    user_ids = fields.One2many('change.password.user', 'wizard_id', string='Users', default=_default_user_ids)
+
+    def change_password_button(self):
+        self.ensure_one()
+        self.user_ids.change_password_button()
+        if self.env.user in self.user_ids.user_id:
+            return {'type': 'ir.actions.client', 'tag': 'reload'}
+        return {'type': 'ir.actions.act_window_close'}
+
+class ChangePasswordUser(models.TransientModel):
+    _name = 'change.password.user'
+    _description = 'User, Change Password Wizard'
+
+    wizard_id = fields.Many2one('change.password.wizard', string='Wizard', required=True, ondelete='cascade')
+    user_id = fields.Many2one('res.users', string='User', required=True, ondelete='cascade')
+    user_login = fields.Char(string='User Login', readonly=True)
+    new_passwd = fields.Char(string='New Password', default='')
+
+    def change_password_button(self):
+        for line in self:
+            if not line.new_passwd:
+                raise UserError(_("Before clicking on 'Change Password', you have to write a new password."))
+            line.user_id._change_password(line.new_passwd)
+        # don't keep temporary passwords in the database longer than necessary
+        self.write({'new_passwd': False})
+
+class ChangePasswordOwn(models.TransientModel):
+    _name = "change.password.own"
+    _description = "User, change own password wizard"
+    _transient_max_hours = 0.1
+
+    new_password = fields.Char(string="New Password")
+    confirm_password = fields.Char(string="New Password (Confirmation)")
+
+    @api.constrains('new_password', 'confirm_password')
+    def _check_password_confirmation(self):
+        if self.confirm_password != self.new_password:
+            raise ValidationError(_("The new password and its confirmation must be identical."))
+
+    @check_identity
+    def change_password(self):
+        self.env.user._change_password(self.new_password)
+        self.unlink()
+        # reload to avoid a session expired error
+        # would be great to update the session id in-place, but it seems dicey
+        return {'type': 'ir.actions.client', 'tag': 'reload'}
+    
+
 class ResetPasswordREST(http.Controller):
 
-    
     def generate_token(self, email):
 
         now = datetime.datetime.now()
@@ -35,61 +142,84 @@ class ResetPasswordREST(http.Controller):
         password = data.get('password')
         token = data.get('token')
 
+        _logger.info(f"Received data: email={email}, password={password}, token={token}")
+
         if not token or not password:
+            _logger.error("Missing token or password")
             return werkzeug.wrappers.Response(
                 status=400,
                 content_type='application/json; charset=utf-8',
                 headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                response=json.dumps({'status': 'error', 'message': f'email non valide '})
+                response=json.dumps({'status': 'error', 'message': 'Missing token or password'})
             )
 
         try:
             user = request.env['res.users'].sudo().search([('email', '=', email)], limit=1)
             partner = request.env['res.partner'].sudo().search([('signup_token', '=', token)], limit=1)
-            if partner and user:
-                if partner.signup_expiration > datetime.datetime.now():
-                    return werkzeug.wrappers.Response(
-                        status=400,
-                        content_type='application/json; charset=utf-8',
-                        headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                        response=json.dumps({'status': 'error', 'message': f'Token expirer '})
-                    )
-                partner.write({
-                    'signup_type' : None,
-                    'signup_token': None,
-                    'signup_expiration': None,
-                })
-                # user._set_password(password)
-                new_passwd = password.strip()
-                if not new_passwd:
 
-                    return werkzeug.wrappers.Response(
-                        status=200,
-                        content_type='application/json; charset=utf-8',
-                        headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                        response=json.dumps({'status': 'error', 'message': f'"Setting empty passwords is not allowed for security reasons!"'})
-                    )
-                res_user = user.write({
-                    'password': new_passwd
-                })
-                # user._password_changed = True
-                if res_user:
-                    return werkzeug.wrappers.Response(
-                        status=200,
-                        content_type='application/json; charset=utf-8',
-                        headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                        response=json.dumps({'status': 'success', 'message': f'Le mot de passe a été réinitialisé avec succès'})
-                    )
+            if not user:
+                _logger.error(f"User not found for email: {email}")
+                return werkzeug.wrappers.Response(
+                    status=400,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                    response=json.dumps({'status': 'error', 'message': 'User not found'})
+                )
+
+            if not partner:
+                _logger.error(f"Partner not found for token: {token}")
+                return werkzeug.wrappers.Response(
+                    status=400,
+                    content_type='application/json; charset=utf-8',
+                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                    response=json.dumps({'status': 'error', 'message': 'Invalid token'})
+                )
+
+            # if partner.signup_expiration <= datetime.datetime.now():
+            #     _logger.error(f"Token expired for partner: {partner.id}")
+            #     return werkzeug.wrappers.Response(
+            #         status=400,
+            #         content_type='application/json; charset=utf-8',
+            #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            #         response=json.dumps({'status': 'error', 'message': 'Token expired'})
+            #     )
+
+            partner.write({
+                'signup_type': None,
+                'signup_token': None,
+                'signup_expiration': None,
+            })
+
+            # Utiliser le wizard pour changer le mot de passe
+            # wizard = request.env['change.password.wizard'].create({
+            #     'user_ids': [(0, 0, {'user_id': user.id, 'user_login': user.login, 'new_passwd': password})]
+            # })
+            # wizard.change_password_button()
+            # Changer le mot de passe directement
+            # user._change_password(password)
+            # Changer le mot de passe directement en utilisant la méthode change_password
+            # user.sudo().change_password(old_passwd='', new_passwd=password)
+            # Changer le mot de passe directement en utilisant la méthode _change_password
+            user.sudo()._change_password(password)
+
+            _logger.info(f"Password changed successfully for user: {user.id}")
+            return werkzeug.wrappers.Response(
+                status=200,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps({'status': 'success', 'message': 'Le mot de passe a été réinitialisé avec succès'})
+            )
 
         except Exception as e:
             _logger.error(f'Erreur lors de la réinitialisation du mot de passe: {str(e)}')
             return werkzeug.wrappers.Response(
-                    status=400,
-                    content_type='application/json; charset=utf-8',
-                    headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                    response=json.dumps({'status': 'error', 'message': str(e)})
-                )
+                status=400,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps({'status': 'error', 'message': str(e)})
+            )
 
+        
 
     @http.route('/api/reset-password/<email>', methods=['GET'], type='http', auth='none', cors='*', csrf=False)
     def reset_password_request(self,email, **kwargs):
