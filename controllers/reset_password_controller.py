@@ -135,7 +135,7 @@ class ResetPasswordREST(http.Controller):
         token = token[:16]
         return token
 
-    @http.route('/api/new-password', methods=['POST'], type='json', auth='none', cors='*', csrf=False)
+    @http.route('/api/new-password', methods=['POST'], type='http', auth='none', cors='*', csrf=False)
     def reset_password(self, **kwargs):
         data = json.loads(request.httprequest.data)
         email = data.get('email')
@@ -185,22 +185,25 @@ class ResetPasswordREST(http.Controller):
             #     )
 
             partner.write({
-                'signup_type': None,
-                'signup_token': None,
-                'signup_expiration': None,
+                'signup_type': '',
+                'signup_token': '',
+                'signup_expiration': '',
             })
 
+           
+            admin_user = request.env.ref('base.user_admin')
+            request.env = request.env(user=admin_user.id)
             # Utiliser le wizard pour changer le mot de passe
-            # wizard = request.env['change.password.wizard'].create({
-            #     'user_ids': [(0, 0, {'user_id': user.id, 'user_login': user.login, 'new_passwd': password})]
-            # })
-            # wizard.change_password_button()
+            wizard = request.env['change.password.wizard'].create({
+                'user_ids': [(0, 0, {'user_id': user.id, 'user_login': user.login, 'new_passwd': password})]
+            })
+            wizard.change_password_button()
             # Changer le mot de passe directement
             # user._change_password(password)
             # Changer le mot de passe directement en utilisant la méthode change_password
             # user.sudo().change_password(old_passwd='', new_passwd=password)
             # Changer le mot de passe directement en utilisant la méthode _change_password
-            user.sudo()._change_password(password)
+            # user.sudo().change_password(password)
 
             _logger.info(f"Password changed successfully for user: {user.id}")
             return werkzeug.wrappers.Response(
