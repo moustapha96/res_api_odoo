@@ -292,7 +292,7 @@ class ControllerREST(http.Controller):
 
     @http.route('/api/produits', methods=['GET'], type='http', auth='none', cors="*")
     def api__products_GET(self, **kw):
-        products = request.env['product.product'].sudo().search([])
+        products = request.env['product.product'].sudo().search([('sale_ok', '=', True)])
         product_data = []
         if products:
             for p in products:
@@ -344,7 +344,7 @@ class ControllerREST(http.Controller):
 
     @http.route('/api/produits/<id>', methods=['GET'], type='http', auth='none', cors="*")
     def api__products__one_GET(self,id, **kw):
-        p = request.env['product.product'].sudo().search([ ( 'id' , '=' , id ) ])
+        p = request.env['product.product'].sudo().search([ ( 'id' , '=' , id ),('sale_ok', '=', True) ])
         if p:
             produit_data = {
                 'id': p.id,
