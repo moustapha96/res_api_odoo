@@ -244,7 +244,7 @@ class ResetPasswordREST(http.Controller):
 
         # Construire le contenu de l'e-mail
         subject = 'Réinitialiser votre mot de passe'
-        reset_url = f'http://orbitcity.sn/new-password?mail={user.email}&token={token}'
+        reset_url = f'https://ccbme.sn/new-password?mail={user.email}&token={token}'
         body_html = f'''
         <table border="0" cellpadding="0" cellspacing="0" style="padding-top: 16px; background-color: #FFFFFF; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;">
             <tr>
@@ -262,7 +262,7 @@ class ResetPasswordREST(http.Controller):
                                                 </span>
                                             </td>
                                             <td valign="middle" align="right">
-                                                <img style="padding: 0px; margin: 0px; height: auto; width: 80px;" src="http://orbitcity.sn/logo.png" alt="logo CCBM SHOP"/>
+                                                <img style="padding: 0px; margin: 0px; height: auto; width: 80px;" src="https://ccbme.sn/logo.png" alt="logo CCBM SHOP"/>
                                             </td>
                                         </tr>
                                         <tr>
@@ -326,7 +326,7 @@ class ResetPasswordREST(http.Controller):
                     <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;">
                         <tr>
                             <td style="text-align: center; font-size: 13px;">
-                                Généré par <a target="_blank" href="http://orbitcity.sn" style="color: #875A7B;">Orbit City</a>
+                                Généré par <a target="_blank" href="https://ccbme.sn" style="color: #875A7B;">Orbit City</a>
                             </td>
                         </tr>
                     </table>

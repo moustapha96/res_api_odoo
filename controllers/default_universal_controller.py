@@ -37,7 +37,7 @@ class ControllerREST(http.Controller):
                                                 </span>
                                             </td>
                                             <td valign="middle" align="right">
-                                                <img style="padding: 0px; margin: 0px; height: auto; width: 80px;" src="http://orbitcity.sn/logo.png" alt="logo CCBM SHOP"/>
+                                                <img style="padding: 0px; margin: 0px; height: auto; width: 80px;" src="https://ccbme.sn/logo.png" alt="logo CCBM SHOP"/>
                                             </td>
                                         </tr>
                                         <tr>
@@ -59,7 +59,7 @@ class ControllerREST(http.Controller):
                                                     Votre identifiant est <strong>{user.email}</strong><br/>
                                                     Pour accéder à votre compte, vous pouvez utiliser le lien suivant :
                                                     <div style="margin: 16px 0px 16px 0px;">
-                                                        <a style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;" href="http://orbitcity.sn/login?mail={user.email}&isVerified=1&token={user.id}">
+                                                        <a style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;" href="https://ccbme.sn/login?mail={user.email}&isVerified=1&token={user.id}">
                                                             Aller à Mon compte
                                                         </a>
                                                     </div>
@@ -102,7 +102,7 @@ class ControllerREST(http.Controller):
                     <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;">
                         <tr>
                             <td style="text-align: center; font-size: 13px;">
-                                Généré par <a target="_blank" href="http://orbitcity.sn" style="color: #875A7B;">Orbit City</a>
+                                Généré par <a target="_blank" href="https://ccbme.sn" style="color: #875A7B;">Orbit City</a>
                             </td>
                         </tr>
                     </table>
