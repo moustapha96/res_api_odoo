@@ -17,28 +17,14 @@ class SaleOrder(models.Model):
                         'quantity': line.product_uom_qty,
                         'price_unit': line.price_unit,
                         'name': line.name,
+                        'account_id': line.product_id.property_account_income_id.id or line.product_id.categ_id.property_account_income_categ_id.id,
                     }) for line in order.order_line],
                 })
                 # Validez la facture
                 invoice.action_post()
 
     @api.model
-    def create(self, vals):
-        order = super(SaleOrder, self).create(vals)
-        order.create_invoice()
-        return order
-    # def action_confirm(self):
-    #     res = super(SaleOrder, self).action_confirm()
-    #     self._link_payment_to_invoice()
-    #     return res
-
-    # def _link_payment_to_invoice(self):
-    #     for order in self:
-    #         payment = self.env['account.payment'].sudo().search([('sale_id', '=', order.id)], limit=1)
-    #         if payment:
-    #             invoice = self.env['account.move'].sudo().search([('sale_id', '=', order.id)], limit=1)
-    #             if invoice:
-    #                 payment.write({
-    #                     'move_id': invoice.id,
-    #                     # 'invoice_ids': [(4, invoice.id)],
-    #                 })
+    def action_confirm(self):
+        res = super(SaleOrder, self).action_confirm()
+        self.create_invoice()
+        return res

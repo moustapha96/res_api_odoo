@@ -134,8 +134,8 @@ class PaymentREST(http.Controller):
             # journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
             _logger.info(f'JOURNAL {journal.id} ')
             payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
-            # payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
-            #         ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1) # si journal est cash (id = 7)  et payment method inbound ==> payment method line id  = 1
+            payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
+                    ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1) # si journal est cash (id = 7)  et payment method inbound ==> payment method line id  = 1
             # on a pas besoin de payment method line 
 
             _logger.info(f'journal {journal} ')

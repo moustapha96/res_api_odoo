@@ -9,7 +9,6 @@ _logger = logging.getLogger(__name__)
 class FactureREST(http.Controller):
 
 
-
     @http.route('/api/partner/<id>/factures', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
     def api_get_facture_user(self, id, **kwargs):
         try:
