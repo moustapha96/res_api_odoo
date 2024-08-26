@@ -129,8 +129,8 @@ class PaymentREST(http.Controller):
             _logger.info(f'company {company.name} ')
 
             # journal = request.env['account.journal'].sudo().search([('id', '=', 7) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH (en local )
-            journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'),( 'company_id', '=', company.id ) ], limit=1)  # type = CASH1 id= 7 & company_id = 1  ==> journal id = 7 / journal id = 7 : CASH
-            # journal = request.env['account.journal'].sudo().search([('code', '=', 'sale'),( 'company_id', '=', company.id ) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+            # journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'),( 'company_id', '=', company.id ) ], limit=1)  # type = CASH1 id= 7 & company_id = 1  ==> journal id = 7 / journal id = 7 : CASH
+            journal = request.env['account.journal'].sudo().search([('code', '=', 'sale'),( 'company_id', '=', company.id ) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
             # journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
             _logger.info(f'JOURNAL {journal.id} ')
             payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
