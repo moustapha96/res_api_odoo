@@ -386,9 +386,8 @@ class PaymentREST(http.Controller):
                         'currency': payment_details.currency,
                         'payment_method': payment_details.payment_method,
                         'payment_date': payment_details.payment_date.isoformat(),
-                        'order_id': payment_details.order_id.id,
-                        'partner_id': payment_details.partner_id.id,
-                        'partner_name': payment_details.partner_id.name,
+                        'order_id': payment_details.order_id,
+                        'partner_id': payment_details.partner_id,
                         'payment_token': payment_details.payment_token,
                         'payment_state': payment_details.payment_state,}),
                 status=200,
@@ -475,20 +474,52 @@ class PaymentREST(http.Controller):
                         'amount': payment_details.amount,
                         'currency': payment_details.currency,
                         'payment_method': payment_details.payment_method,
-                        'payment_date': payment_details.payment_date.isoformat(),
-                        'order_id': payment_details.order_id.id,
-                        'order':{
-                            'id' : payment_details.order_id.id,
-                            'name': payment_details.order_id.name
-                        },
-                        'partner_id': payment_details.partner_id.id,
-                        'partner_name': payment_details.partner_id.name,
+                        'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
+                        'order_id': payment_details.order_id,
+                        'partner_id': payment_details.partner_id,
                         'payment_token': payment_details.payment_token,
                         'payment_state': payment_details.payment_state,
                     }),
                     status=200,
                     headers={'Content-Type': 'application/json'}
                 )
+
+        except Exception as e:
+            return request.make_response(
+                json.dumps({"error": str(e)}),
+                status=400,
+                headers={'Content-Type': 'application/json'}
+            )
+
+
+
+    @http.route('/api/payment/update/<id>', methods=['PUT'], type='http', auth='none', cors='*' ,csrf=False)
+    def update_payment_by_id(self, id, **kw):
+        try:
+            data = json.loads(request.httprequest.data)
+            payment_state = data.get('payment_state')
+            payment_date = datetime.datetime.now()
+
+            payment_details = request.env['payment.details'].sudo().search([('id', '=', id)], limit=1)
+
+            if not payment_details:
+                return request.make_response(
+                    json.dumps({"error": "Payment details not found"}),
+                    status=404,
+                    headers={'Content-Type': 'application/json'}
+                )
+
+            # Mettre à jour les champs avec les nouvelles valeurs
+            payment_details.write({
+                'payment_state': payment_state,
+                'payment_date': payment_date,
+            })
+
+            return request.make_response(
+                json.dumps({"success": "Payment details updated successfully"}),
+                status=200,
+                headers={'Content-Type': 'application/json'}
+            )
 
         except Exception as e:
             return request.make_response(
