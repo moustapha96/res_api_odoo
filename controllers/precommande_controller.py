@@ -94,11 +94,24 @@ class PreCommandeREST(http.Controller):
             response=json.dumps("user_id est obligatoire")
         )
 
-    @http.route('/api/precommandes/<id>/details', methods=['GET'], type='http', auth='none', cors="*")
-    def api_preorders__GET_ONE(self, id , **kw):
-        order = request.env['sale.order'].sudo().search([('id','=', id) , ('type_sale' , '=' , 'preorder' )])
+    @http.route('/api/precommandes/details', methods=['POST'], type='http', auth='none', cors="*" , csrf=False)
+    def api_preorders__GET_ONE(self,  **kw):
+        data = json.loads(request.httprequest.data)
+        partner_id = int( data.get('partner_id'))
+        precommande_id = int (data.get('precommande_id'))
+        order = request.env['sale.order'].sudo().search([('id','=', precommande_id) , ('type_sale' , '=' , 'preorder' ) , ( 'partner_id', '=', partner_id )])
+
         payment = request.env['account.payment'].sudo().search([ ( 'sale_id', '=' , order.id ) ])
         # invoice = request.env['account.move'].sudo().search([ ( 'id', '=' , payment.move_id ) ])
+       
+        if not order:
+            return werkzeug.wrappers.Response(
+                status=404,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps("Précommande introuvable")
+            )
+
         invoice_p = []
         if len (payment) > 0:
             for pp in payment:

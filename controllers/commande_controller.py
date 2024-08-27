@@ -85,9 +85,24 @@ class CommandeREST(http.Controller):
             )
 
 
-    @http.route('/api/commandes/<id>/details', methods=['GET'], type='http', auth='none', cors="*")
-    def api_orders__GET_ONE(self, id , **kw):
-        order = request.env['sale.order'].sudo().search([('id','=',id), ('type_sale' , '=' , 'order' )])
+    @http.route('/api/commandes/details', methods=['POST'], type='http', auth='none', cors="*", csrf=False)
+    def api_orders__GET_ONE(self,**kw):
+        data = json.loads(request.httprequest.data)
+        partner_id = int( data.get('partner_id'))
+        commande_id = int (data.get('commande_id'))
+
+        order = request.env['sale.order'].sudo().search([
+            ('partner_id', '=', partner_id),
+            ('id', '=', commande_id),
+            ('type_sale', '=', 'order')
+        ])
+        if not order:
+            return werkzeug.wrappers.Response(
+                status=404,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps("Commande introuvable")
+            )
         if order:
             order_data = {
                 'id': order.id,
