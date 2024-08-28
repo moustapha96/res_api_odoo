@@ -368,11 +368,66 @@ class PaymentREST(http.Controller):
                     headers={'Content-Type': 'application/json'}
                 )
           
+            order = request.env['sale.order'].sudo().search([('id','=', order_id )], limit=1)
+            if order.type_sale == "order":
+                payment_details_existe = request.env['payment.details'].sudo().search([('transaction_id', '=', transaction_id)], limit=1)
+                if payment_details_existe:
+                    return request.make_response(
+                        json.dumps({
+                            'id': payment_details_existe.id,
+                            'transaction_id': payment_details_existe.transaction_id,
+                            'amount': payment_details_existe.amount,
+                            'currency': payment_details_existe.currency,
+                            'payment_method': payment_details_existe.payment_method,
+                            'payment_date': payment_details_existe.payment_date.isoformat(),
+                            'order_id': payment_details_existe.order_id,
+                            'order_name': payment_details_existe.order_name,
+                            'order_type': payment_details_existe.order_type,
+                            'partner_id': payment_details_existe.partner_id,
+                            'payment_token': payment_details_existe.payment_token,
+                            'url_facture': payment_details_existe.url_facture,
+                            'customer_name' : payment_details_existe.customer_name,
+                            'customer_email' : payment_details_existe.customer_email,
+                            'customer_phone' : payment_details_existe.customer_phone,
+                            'payment_state': payment_details_existe.payment_state,}),
+                        status=400,
+                        headers={'Content-Type': 'application/json'}
+                    )
+            if  order.type_sale == "preorder":
+                payment_details_existe = request.env['payment.details'].sudo().search([('transaction_id', '=', transaction_id)])
+                if payment_details_existe:
+                    resultat = []
+                    for payment_detail in payment_details_existe:
+                        resultat.append({
+                            'id': payment_detail.id,
+                            'transaction_id': payment_detail.transaction_id,
+                            'amount': payment_detail.amount,
+                            'currency': payment_detail.currency,
+                            'payment_method': payment_detail.payment_method,
+                            'payment_date': payment_detail.payment_date.isoformat(),
+                            'order_id': payment_detail.order_id,
+                            'order_name': payment_detail.order_name,
+                            'order_type': payment_detail.order_type,
+                            'partner_id': payment_detail.partner_id,
+                            'payment_token': payment_detail.payment_token,
+                            'url_facture': payment_detail.url_facture,
+                            'customer_name' : payment_detail.customer_name,
+                            'customer_email' : payment_detail.customer_email,
+                            'customer_phone' : payment_detail.customer_phone,
+                            'payment_state': payment_detail.payment_state,})
+                    return request.make_response(
+                        json.dumps(resultat),
+                        status=200,
+                        headers={'Content-Type': 'application/json'}
+                    )
+                    
             payment_details = request.env['payment.details'].sudo().set_payment_details(
                 transaction_id=transaction_id,
                 amount=amount,
                 payment_date=payment_date,
                 order_id=order_id,
+                order_name=order.name,
+                order_type=order.type_sale,
                 partner_id=partner_id,
                 payment_token=payment_token,
                 payment_state=payment_state
@@ -387,8 +442,14 @@ class PaymentREST(http.Controller):
                         'payment_method': payment_details.payment_method,
                         'payment_date': payment_details.payment_date.isoformat(),
                         'order_id': payment_details.order_id,
+                        'order_name': payment_details.order_name,
+                        'order_type': payment_details.order_type,
                         'partner_id': payment_details.partner_id,
                         'payment_token': payment_details.payment_token,
+                        'url_facture': payment_details.url_facture,
+                        'customer_name' : payment_details.customer_name,
+                        'customer_email' : payment_details.customer_email,
+                        'customer_phone' : payment_details.customer_phone,
                         'payment_state': payment_details.payment_state,}),
                 status=200,
                 headers={'Content-Type': 'application/json'}
@@ -416,15 +477,17 @@ class PaymentREST(http.Controller):
                         'currency': payment_details.currency,
                         'payment_method': payment_details.payment_method,
                         'payment_date': payment_details.payment_date.isoformat(),
-                        'order_id': payment_details.order_id.id,
-                        'order':{
-                            'id' : payment_details.order_id.id,
-                            'name': payment_details.order_id.name
-                        },
+                        'order_id': payment_details.order_id,
+                        'order_name': payment_details.order_name,
+                        'order_type': payment_details.order_type,
                         'partner_id': payment_details.partner_id.id,
                         'partner_name': payment_details.partner_id.name,
                         'payment_token': payment_details.payment_token,
                         'payment_state': payment_details.payment_state,
+                        'url_facture': payment_details.url_facture,
+                        'customer_name' : payment_details.customer_name,
+                        'customer_email' : payment_details.customer_email,
+                        'customer_phone' : payment_details.customer_phone,
                     }),
                     status=200,
                     headers={'Content-Type': 'application/json'}
@@ -476,9 +539,15 @@ class PaymentREST(http.Controller):
                         'payment_method': payment_details.payment_method,
                         'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
                         'order_id': payment_details.order_id,
+                        'order_name': payment_details.order_name,
+                        'order_type': payment_details.order_type,
                         'partner_id': payment_details.partner_id,
                         'payment_token': payment_details.payment_token,
                         'payment_state': payment_details.payment_state,
+                        'url_facture': payment_details.url_facture,
+                        'customer_name' : payment_details.customer_name,
+                        'customer_email' : payment_details.customer_email,
+                        'customer_phone' : payment_details.customer_phone,
                     }),
                     status=200,
                     headers={'Content-Type': 'application/json'}
@@ -493,14 +562,154 @@ class PaymentREST(http.Controller):
 
 
 
+    @http.route('/api/payment/byOrder/<order_id>', methods=['GET'], type='http', auth='none', cors='*')
+    def get_payment_by_name_order(self, order_id, **kw):
+        try:
+            order = request.env['sale.order'].sudo().search([('id','=', order_id )], limit=1)
+            if not order:
+                return request.make_response(
+                    json.dumps({"error": "Order not found"}),
+                    status=404,
+                    headers={'Content-Type': 'application/json'}
+                )
+            if order:
+                if order.type_sale == "preorder":
+                    payment_details = request.env['payment.details'].sudo().search([('order_id', '=', order_id)])
+                    resultat = []
+                    for payment in payment_details:
+                        resultat.append({
+                            'id': payment.id,
+                            'transaction_id': payment.transaction_id,
+                            'amount': payment.amount,
+                            'currency': payment.currency,
+                            'payment_method': payment.payment_method,
+                            'payment_date':  payment.payment_date.isoformat() if payment.payment_date else None,
+                            'order_id': payment.order_id,
+                            'order_name': payment.order_name,
+                            'order_type': payment.order_type,
+                            'partner_id': payment.partner_id,
+                            'payment_token': payment.payment_token,
+                            'payment_state': payment.payment_state,
+                            'url_facture': payment.url_facture,
+                            'customer_name' : payment.customer_name,
+                            'customer_email' : payment.customer_email,
+                            'customer_phone' : payment.customer_phone,
+                        })
+                    return request.make_response(
+                        json.dumps(resultat),
+                        status=200,
+                        headers={'Content-Type': 'application/json'}
+                    )
+                else:
+                    payment_details = request.env['payment.details'].sudo().search([('order_id', '=', order_id)], limit=1)
+                    return request.make_response(
+                            json.dumps({
+                                'id': payment_details.id,
+                                'transaction_id': payment_details.transaction_id,
+                                'amount': payment_details.amount,
+                                'currency': payment_details.currency,
+                                'payment_method': payment_details.payment_method,
+                                'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
+                                'order_id': payment_details.order_id,
+                                'order_name': payment_details.order_name,
+                                'order_type': payment_details.order_type,
+                                'partner_id': payment_details.partner_id,
+                                'payment_token': payment_details.payment_token,
+                                'payment_state': payment_details.payment_state,
+                                'url_facture': payment_details.url_facture,
+                                'customer_name' : payment_details.customer_name,
+                                'customer_email' : payment_details.customer_email,
+                                'customer_phone' : payment_details.customer_phone,
+                            }),
+                            status=200,
+                            headers={'Content-Type': 'application/json'}
+                        )
+
+        except Exception as e:
+            return request.make_response(
+                json.dumps({"error": str(e)}),
+                status=400,
+                headers={'Content-Type': 'application/json'}
+            )
+        
+
+    @http.route('/api/payment/byToken/<token>', methods=['GET'], type='http', auth='none', cors='*')
+    def get_payment_by_token(self, token, **kw):
+        try:
+            payment_details = request.env['payment.details'].sudo().search([('payment_token', '=', token)], limit=1)
+            if not payment_details:
+                return request.make_response(
+                    json.dumps({"error": "Payment details not found"}),
+                    status=404,
+                    headers={'Content-Type': 'application/json'}
+                )
+            else:
+                return request.make_response(
+                        json.dumps({
+                            'id': payment_details.id,
+                            'transaction_id': payment_details.transaction_id,
+                            'amount': payment_details.amount,
+                            'currency': payment_details.currency,
+                            'payment_method': payment_details.payment_method,
+                            'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
+                            'order_id': payment_details.order_id,
+                            'order_name': payment_details.order_name,
+                            'order_type': payment_details.order_type,
+                            'partner_id': payment_details.partner_id,
+                            'payment_token': payment_details.payment_token,
+                            'payment_state': payment_details.payment_state,
+                            'url_facture': payment_details.url_facture,
+                            'customer_name' : payment_details.customer_name,
+                            'customer_email' : payment_details.customer_email,
+                            'customer_phone' : payment_details.customer_phone,
+                        }),
+                        status=200,
+                        headers={'Content-Type': 'application/json'}
+                    )
+
+        except Exception as e:
+            return request.make_response(
+                json.dumps({"error": str(e)}),
+                status=400,
+                headers={'Content-Type': 'application/json'}
+            )
+
+
     @http.route('/api/payment/update/<id>', methods=['PUT'], type='http', auth='none', cors='*' ,csrf=False)
     def update_payment_by_id(self, id, **kw):
         try:
             data = json.loads(request.httprequest.data)
             payment_state = data.get('payment_state')
+            url_facture = data.get('url_facture')
+            customer_name  = data.get('customer_name') , 
+            customer_email = data.get('customer_email'),
+            customer_phone = data.get('customer_phone'),
             payment_date = datetime.datetime.now()
 
             payment_details = request.env['payment.details'].sudo().search([('id', '=', id)], limit=1)
+            if payment_details.payment_state == "completed":
+                return request.make_response(
+                   json.dumps({
+                        'id': payment_details.id,
+                        'transaction_id': payment_details.transaction_id,
+                        'amount': payment_details.amount,
+                        'currency': payment_details.currency,
+                        'payment_method': payment_details.payment_method,
+                        'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
+                        'order_id': payment_details.order_id,
+                        'order_name': payment_details.order_name,
+                        'order_type': payment_details.order_type,
+                        'partner_id': payment_details.partner_id,
+                        'payment_token': payment_details.payment_token,
+                        'payment_state': payment_details.payment_state,
+                        'url_facture': payment_details.url_facture,
+                        'customer_name' : payment_details.customer_name,
+                        'customer_email' : payment_details.customer_email,
+                        'customer_phone' : payment_details.customer_phone,
+                    }),
+                    status=200,
+                    headers={'Content-Type': 'application/json'}
+                )
 
             if not payment_details:
                 return request.make_response(
@@ -513,13 +722,34 @@ class PaymentREST(http.Controller):
             payment_details.write({
                 'payment_state': payment_state,
                 'payment_date': payment_date,
+                'url_facture': url_facture,
+                'customer_name' : customer_name,
+                'customer_email' : customer_email,
+                'customer_phone' : customer_phone,
             })
 
             return request.make_response(
-                json.dumps({"success": "Payment details updated successfully"}),
-                status=200,
-                headers={'Content-Type': 'application/json'}
-            )
+                json.dumps({
+                        'id': payment_details.id,
+                        'transaction_id': payment_details.transaction_id,
+                        'amount': payment_details.amount,
+                        'currency': payment_details.currency,
+                        'payment_method': payment_details.payment_method,
+                        'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
+                        'order_id': payment_details.order_id,
+                        'order_name': payment_details.order_name,
+                        'order_type': payment_details.order_type,
+                        'partner_id': payment_details.partner_id,
+                        'payment_token': payment_details.payment_token,
+                        'payment_state': payment_details.payment_state,
+                        'url_facture': payment_details.url_facture,
+                        'customer_name' : payment_details.customer_name,
+                        'customer_email' : payment_details.customer_email,
+                        'customer_phone' : payment_details.customer_phone,
+                    }),
+                    status=200,
+                    headers={'Content-Type': 'application/json'}
+                )
 
         except Exception as e:
             return request.make_response(
