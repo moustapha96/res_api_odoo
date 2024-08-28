@@ -390,7 +390,7 @@ class PaymentREST(http.Controller):
                             'customer_email' : payment_details_existe.customer_email,
                             'customer_phone' : payment_details_existe.customer_phone,
                             'payment_state': payment_details_existe.payment_state,}),
-                        status=400,
+                        status=200,
                         headers={'Content-Type': 'application/json'}
                     )
             if  order.type_sale == "preorder":
