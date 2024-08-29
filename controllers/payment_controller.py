@@ -367,7 +367,7 @@ class PaymentREST(http.Controller):
                     status=400,
                     headers={'Content-Type': 'application/json'}
                 )
-          
+
             order = request.env['sale.order'].sudo().search([('id','=', order_id )], limit=1)
             if order.type_sale == "order":
                 payment_details_existe = request.env['payment.details'].sudo().search([('transaction_id', '=', transaction_id)], limit=1)
