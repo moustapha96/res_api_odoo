@@ -372,6 +372,12 @@ class PaymentREST(http.Controller):
             if order.type_sale == "order":
                 payment_details_existe = request.env['payment.details'].sudo().search([('transaction_id', '=', transaction_id)], limit=1)
                 if payment_details_existe:
+                    payment_details_existe.write({
+                        'amount': amount,
+                        'payment_date': payment_date,
+                        'payment_token': payment_token,
+                        'payment_state': payment_state
+                    })
                     return request.make_response(
                         json.dumps({
                             'id': payment_details_existe.id,
@@ -394,32 +400,72 @@ class PaymentREST(http.Controller):
                         headers={'Content-Type': 'application/json'}
                     )
             if  order.type_sale == "preorder":
-                payment_details_existe = request.env['payment.details'].sudo().search([('transaction_id', '=', transaction_id)])
+                payment_details_existe = request.env['payment.details'].sudo().search([('transaction_id', '=', transaction_id)], limit=1)
                 if payment_details_existe:
-                    resultat = []
-                    for payment_detail in payment_details_existe:
-                        resultat.append({
-                            'id': payment_detail.id,
-                            'transaction_id': payment_detail.transaction_id,
-                            'amount': payment_detail.amount,
-                            'currency': payment_detail.currency,
-                            'payment_method': payment_detail.payment_method,
-                            'payment_date': payment_detail.payment_date.isoformat(),
-                            'order_id': payment_detail.order_id,
-                            'order_name': payment_detail.order_name,
-                            'order_type': payment_detail.order_type,
-                            'partner_id': payment_detail.partner_id,
-                            'payment_token': payment_detail.payment_token,
-                            'url_facture': payment_detail.url_facture,
-                            'customer_name' : payment_detail.customer_name,
-                            'customer_email' : payment_detail.customer_email,
-                            'customer_phone' : payment_detail.customer_phone,
-                            'payment_state': payment_detail.payment_state,})
-                    return request.make_response(
-                        json.dumps(resultat),
-                        status=200,
-                        headers={'Content-Type': 'application/json'}
-                    )
+                    if  payment_details_existe.payment_state == "completed":
+                        minutes = payment_date.minute
+                        new_transaction_id = payment_details_existe.transaction_id + '-' + str(minutes)
+
+                        payment_details = request.env['payment.details'].sudo().set_payment_details(
+                            transaction_id=new_transaction_id,
+                            amount=amount,
+                            payment_date=payment_date,
+                            order_id=order_id,
+                            order_name=order.name,
+                            order_type=order.type_sale,
+                            partner_id=partner_id,
+                            payment_token=payment_token,
+                            payment_state=payment_state
+                        )
+                        return request.make_response(
+                            json.dumps({
+                                    'id': payment_details.id,
+                                    'transaction_id': payment_details.transaction_id,
+                                    'amount': payment_details.amount,
+                                    'currency': payment_details.currency,
+                                    'payment_method': payment_details.payment_method,
+                                    'payment_date': payment_details.payment_date.isoformat(),
+                                    'order_id': payment_details.order_id,
+                                    'order_name': payment_details.order_name,
+                                    'order_type': payment_details.order_type,
+                                    'partner_id': payment_details.partner_id,
+                                    'payment_token': payment_details.payment_token,
+                                    'url_facture': payment_details.url_facture,
+                                    'customer_name' : payment_details.customer_name,
+                                    'customer_email' : payment_details.customer_email,
+                                    'customer_phone' : payment_details.customer_phone,
+                                    'payment_state': payment_details.payment_state,}),
+                            status=200,
+                            headers={'Content-Type': 'application/json'}
+                        )
+                    else:
+                        payment_details_existe.write({
+                            'amount': amount,
+                            'payment_date': payment_date,
+                            'payment_token': payment_token,
+                            'payment_state': payment_state
+                        })    
+                        return request.make_response(
+                            json.dumps({
+                                'id': payment_details_existe.id,
+                                'transaction_id': payment_details_existe.transaction_id,
+                                'amount': payment_details_existe.amount,
+                                'currency': payment_details_existe.currency,
+                                'payment_method': payment_details_existe.payment_method,
+                                'payment_date': payment_details_existe.payment_date.isoformat(),
+                                'order_id': payment_details_existe.order_id,
+                                'order_name': payment_details_existe.order_name,
+                                'order_type': payment_details_existe.order_type,
+                                'partner_id': payment_details_existe.partner_id,
+                                'payment_token': payment_details_existe.payment_token,
+                                'url_facture': payment_details_existe.url_facture,
+                                'customer_name' : payment_details_existe.customer_name,
+                                'customer_email' : payment_details_existe.customer_email,
+                                'customer_phone' : payment_details_existe.customer_phone,
+                                'payment_state': payment_details_existe.payment_state,}),
+                            status=200,
+                            headers={'Content-Type': 'application/json'}
+                        )
                     
             payment_details = request.env['payment.details'].sudo().set_payment_details(
                 transaction_id=transaction_id,
@@ -574,7 +620,7 @@ class PaymentREST(http.Controller):
                 )
             if order:
                 if order.type_sale == "preorder":
-                    payment_details = request.env['payment.details'].sudo().search([('order_id', '=', order_id)])
+                    payment_details = request.env['payment.details'].sudo().search([('order_id', '=', order_id),( 'payment_state', '=', 'completed' )])
                     resultat = []
                     for payment in payment_details:
                         resultat.append({
