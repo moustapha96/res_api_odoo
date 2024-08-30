@@ -596,7 +596,10 @@ class ControllerREST(http.Controller):
                     'notification_type': 'email',
                     'company_id': partner.company_id.id,
                     'company_ids': [partner.company_id.id],
-                    'create_uid': 1
+                    'create_uid': 1,
+                    # 'share': True,
+                    # 'is_web_user': True,
+                    # 'groups_id': [(6, 0, [request.env.ref('base.group_portal').id])] or None
                 })
                 if user:
                     partner.write({

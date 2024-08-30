@@ -8,3 +8,4 @@ from . import ir_model
 from . import payment_details
 # from . import account_payment
 from . import sale_order_mail
+from . import account_payment_preorder
