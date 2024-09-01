@@ -563,15 +563,15 @@ class ControllerREST(http.Controller):
                 headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
                 response=json.dumps("Utilisateur avec cet adresse mail existe déjà")
             )
-        partner_phone =  request.env['res.partner'].sudo().search([('phone', '=', phone)], limit=1)
-        if partner_phone :
-            return werkzeug.wrappers.Response(
-                status=400,
-                content_type='application/json; charset=utf-8',
-                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-                response=json.dumps("Utilisateur avec ce numero téléphone existe déjà")
-            )
-        if not partner_email and not partner_phone:
+        # partner_phone =  request.env['res.partner'].sudo().search([('phone', '=', phone)], limit=1)
+        # if partner_phone :
+        #     return werkzeug.wrappers.Response(
+        #         status=400,
+        #         content_type='application/json; charset=utf-8',
+        #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+        #         response=json.dumps("Utilisateur avec ce numero téléphone existe déjà")
+        #     )
+        if not partner_email :
             partner = request.env['res.partner'].sudo().create({
                 'name': name,
                 'email': email,
