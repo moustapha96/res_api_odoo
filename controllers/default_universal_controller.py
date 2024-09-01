@@ -673,6 +673,11 @@ class ControllerREST(http.Controller):
                 response=json.dumps("Utilisateur avec ce numero téléphone existe déjà")
             )
         if not partner_email and not partner_phone:
+            user = request.env['res.users'].sudo().search([('id', '=', request.env.uid)], limit=1)
+            if not user or user._is_public():
+                admin_user = request.env.ref('base.user_admin')
+                request.env = request.env(user=admin_user.id)
+
             partner = request.env['res.partner'].sudo().create({
                 'name': name,
                 'email': email,
@@ -688,7 +693,7 @@ class ControllerREST(http.Controller):
             })
             if partner:
                 # Création de l'utilisateur
-                user = request.env['res.users'].sudo().create({
+                userc = request.env['res.users'].sudo().create({
                     'login': email,
                     'password': password,
                     'partner_id': partner.id,
@@ -697,31 +702,31 @@ class ControllerREST(http.Controller):
                     'company_id': partner.company_id.id,
                     'company_ids': [partner.company_id.id],
                 })
-                if user:
+                if userc:
                     partner.write({
-                        'user_id': user.id
+                        'user_id': userc.id
                     })
-                    self.send_verification_mail(user.email)
+                    self.send_verification_mail(userc.email)
                     return werkzeug.wrappers.Response(
                         status=201,
                         content_type='application/json; charset=utf-8',
                         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
                         response=json.dumps({
-                            'id': user.id,
-                            'name': user.name,
-                            'email': user.email,
-                            'partner_id': user.partner_id.id,
-                            'company_id': user.company_id.id,
-                            'company_name': user.company_id.name,
-                            'partner_city': user.partner_id.city,
-                            'partner_phone': user.partner_id.phone,
-                            'country_id': user.partner_id.country_id.id or None,
-                            'country_name': user.partner_id.country_id.name or None,
-                            'country_code': user.partner_id.country_id.code,
-                            'country_phone_code': user.partner_id.country_id.phone_code,
+                            'id': userc.id,
+                            'name': userc.name,
+                            'email': userc.email,
+                            'partner_id': userc.partner_id.id,
+                            'company_id': userc.company_id.id,
+                            'company_name': userc.company_id.name,
+                            'partner_city': userc.partner_id.city,
+                            'partner_phone': userc.partner_id.phone,
+                            'country_id': userc.partner_id.country_id.id or None,
+                            'country_name': userc.partner_id.country_id.name or None,
+                            'country_code': userc.partner_id.country_id.code,
+                            'country_phone_code': userc.partner_id.country_id.phone_code,
                             'is_verified': self.get_verification_status(email) or None,
                             'avatar': self.get_user_avatar(email) or None,
-                            'image_1920': user.partner_id.image_1920 or None
+                            'image_1920': userc.partner_id.image_1920 or None
                         })
                     )
 
