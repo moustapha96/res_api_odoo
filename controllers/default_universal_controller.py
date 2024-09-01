@@ -533,7 +533,109 @@ class ControllerREST(http.Controller):
                 response=json.dumps("Erreur lors de la reccuperation des pays"))
 
 
-    @http.route('/api/new_compte',  methods=['POST'] , type='http', auth='none' , cors="*" , csrf=False )
+    # @http.route('/api/new_compte',  methods=['POST'] , type='http', auth='none' , cors="*" , csrf=False )
+    # def api_new_compte_post(self, **kw):
+    #     data = json.loads(request.httprequest.data)
+    #     if not data:
+    #         return werkzeug.wrappers.Response(
+    #             status=400,
+    #             content_type='application/json; charset=utf-8',
+    #             headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+    #             response=json.dumps("Données manquantes")
+    #         )
+
+    #     name = data.get('name')
+    #     email = data.get('email')
+    #     password = data.get('password')
+    #     # company_name = data.get('company_name')
+    #     city = data.get('city')
+    #     phone = data.get('phone')
+
+    #     company = request.env['res.company'].sudo().search([('id', '=', 1)], limit=1)
+    #     country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
+
+    #     partner_email = request.env['res.partner'].sudo().search([('email', '=', email)], limit=1)
+
+    #     if partner_email :
+    #         return werkzeug.wrappers.Response(
+    #             status=400,
+    #             content_type='application/json; charset=utf-8',
+    #             headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+    #             response=json.dumps("Utilisateur avec cet adresse mail existe déjà")
+    #         )
+    #     # partner_phone =  request.env['res.partner'].sudo().search([('phone', '=', phone)], limit=1)
+    #     # if partner_phone :
+    #     #     return werkzeug.wrappers.Response(
+    #     #         status=400,
+    #     #         content_type='application/json; charset=utf-8',
+    #     #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+    #     #         response=json.dumps("Utilisateur avec ce numero téléphone existe déjà")
+    #     #     )
+    #     if not partner_email :
+    #         partner = request.env['res.partner'].sudo().create({
+    #             'name': name,
+    #             'email': email,
+    #             'customer_rank': 1,
+    #             'company_id': company.id,
+    #             'city': city,
+    #             'phone': phone,
+    #             'is_company': False,
+    #             'active' : True,
+    #             'type': 'contact',
+    #             'company_name': company.name,
+    #             'country_id': country.id or None,
+    #         })
+    #         if partner:
+    #             # Création de l'utilisateur
+    #             user = request.env['res.users'].sudo().create({
+    #                 'login': email,
+    #                 'password': password,
+    #                 'partner_id': partner.id,
+    #                 'active': True,
+    #                 # 'karma': 0,
+    #                 'notification_type': 'email',
+    #                 'company_id': partner.company_id.id,
+    #                 'company_ids': [partner.company_id.id],
+    #                 # 'create_uid': 1,
+    #                 # 'share': True,
+    #                 # 'is_web_user': True,
+    #                 # 'groups_id': [(6, 0, [request.env.ref('base.group_portal').id])] or None
+    #             })
+    #             if user:
+    #                 partner.write({
+    #                     'user_id': user.id
+    #                 })
+    #                 self.send_verification_mail(user.email)
+    #                 return werkzeug.wrappers.Response(
+    #                     status=201,
+    #                     content_type='application/json; charset=utf-8',
+    #                     headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+    #                     response=json.dumps({
+    #                         'id': user.id,
+    #                         'name': user.name,
+    #                         'email': user.email,
+    #                         'partner_id': user.partner_id.id,
+    #                         'company_id': user.company_id.id,
+    #                         'company_name': user.company_id.name,
+    #                         'partner_city': user.partner_id.city,
+    #                         'partner_phone': user.partner_id.phone,
+    #                         'country_id': user.partner_id.country_id.id or None,
+    #                         'country_name': user.partner_id.country_id.name or None,
+    #                         'country_code': user.partner_id.country_id.code,
+    #                         'country_phone_code': user.partner_id.country_id.phone_code,
+    #                         'is_verified' : self.get_verification_status(email) or None,
+    #                         'avatar': self.get_user_avatar(email) or None,
+    #                         'image_1920': user.partner_id.image_1920 or None
+    #                     })
+    #                 )
+
+    #     return werkzeug.wrappers.Response(
+    #         status=400,
+    #         content_type='application/json; charset=utf-8',
+    #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+    #         response=json.dumps(f"Compte client non créer")
+    #     )
+    @http.route('/api/new_compte', methods=['POST'], type='http', auth='none', cors="*", csrf=False)
     def api_new_compte_post(self, **kw):
         data = json.loads(request.httprequest.data)
         if not data:
@@ -547,31 +649,30 @@ class ControllerREST(http.Controller):
         name = data.get('name')
         email = data.get('email')
         password = data.get('password')
-        # company_name = data.get('company_name')
         city = data.get('city')
         phone = data.get('phone')
 
         company = request.env['res.company'].sudo().search([('id', '=', 1)], limit=1)
-        country = request.env['res.country'].sudo().search([ ('id' , '=' , 204 ) ] , limit = 1 )
+        country = request.env['res.country'].sudo().search([('id', '=', 204)], limit=1)
 
         partner_email = request.env['res.partner'].sudo().search([('email', '=', email)], limit=1)
 
-        if partner_email :
+        if partner_email:
             return werkzeug.wrappers.Response(
                 status=400,
                 content_type='application/json; charset=utf-8',
                 headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
                 response=json.dumps("Utilisateur avec cet adresse mail existe déjà")
             )
-        # partner_phone =  request.env['res.partner'].sudo().search([('phone', '=', phone)], limit=1)
-        # if partner_phone :
-        #     return werkzeug.wrappers.Response(
-        #         status=400,
-        #         content_type='application/json; charset=utf-8',
-        #         headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-        #         response=json.dumps("Utilisateur avec ce numero téléphone existe déjà")
-        #     )
-        if not partner_email :
+        partner_phone = request.env['res.partner'].sudo().search([('phone', '=', phone)], limit=1)
+        if partner_phone:
+            return werkzeug.wrappers.Response(
+                status=400,
+                content_type='application/json; charset=utf-8',
+                headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+                response=json.dumps("Utilisateur avec ce numero téléphone existe déjà")
+            )
+        if not partner_email and not partner_phone:
             partner = request.env['res.partner'].sudo().create({
                 'name': name,
                 'email': email,
@@ -580,7 +681,7 @@ class ControllerREST(http.Controller):
                 'city': city,
                 'phone': phone,
                 'is_company': False,
-                'active' : True,
+                'active': True,
                 'type': 'contact',
                 'company_name': company.name,
                 'country_id': country.id or None,
@@ -592,14 +693,9 @@ class ControllerREST(http.Controller):
                     'password': password,
                     'partner_id': partner.id,
                     'active': True,
-                    # 'karma': 0,
                     'notification_type': 'email',
                     'company_id': partner.company_id.id,
                     'company_ids': [partner.company_id.id],
-                    # 'create_uid': 1,
-                    # 'share': True,
-                    # 'is_web_user': True,
-                    # 'groups_id': [(6, 0, [request.env.ref('base.group_portal').id])] or None
                 })
                 if user:
                     partner.write({
@@ -623,7 +719,7 @@ class ControllerREST(http.Controller):
                             'country_name': user.partner_id.country_id.name or None,
                             'country_code': user.partner_id.country_id.code,
                             'country_phone_code': user.partner_id.country_id.phone_code,
-                            'is_verified' : self.get_verification_status(email) or None,
+                            'is_verified': self.get_verification_status(email) or None,
                             'avatar': self.get_user_avatar(email) or None,
                             'image_1920': user.partner_id.image_1920 or None
                         })
