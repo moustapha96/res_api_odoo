@@ -188,6 +188,7 @@ class userREST(http.Controller):
                     'company_email': user.company_id.email or None,
                     'company_phone': user.company_id.phone or None,
                     'is_verified' : self.get_verification_status(user.email) or None,
+                    'avatar': self.get_user_avatar(user.email) or None,
                     'image_1920': user.partner_id.image_1920 or None
                 }
 

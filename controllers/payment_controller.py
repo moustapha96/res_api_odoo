@@ -607,7 +607,6 @@ class PaymentREST(http.Controller):
             )
 
 
-
     @http.route('/api/payment/byOrder/<order_id>', methods=['GET'], type='http', auth='none', cors='*')
     def get_payment_by_name_order(self, order_id, **kw):
         try:
@@ -618,6 +617,9 @@ class PaymentREST(http.Controller):
                     status=404,
                     headers={'Content-Type': 'application/json'}
                 )
+            if not request.env.user or request.env.user._is_public():
+                admin_user = request.env.ref('base.user_admin')
+                request.env = request.env(user=admin_user.id)
             if order:
                 if order.type_sale == "preorder":
                     payment_details = request.env['payment.details'].sudo().search([('order_id', '=', order_id),( 'payment_state', '=', 'completed' )])
@@ -719,7 +721,6 @@ class PaymentREST(http.Controller):
                 status=400,
                 headers={'Content-Type': 'application/json'}
             )
-
 
     @http.route('/api/payment/update/<id>', methods=['PUT'], type='http', auth='none', cors='*' ,csrf=False)
     def update_payment_by_id(self, id, **kw):
