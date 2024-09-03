@@ -475,7 +475,6 @@ class ControllerREST(http.Controller):
 
 
 
-
     # Reccuperer la liste des stats
     @http.route('/api/state', methods=['GET'], type='http', auth='none', cors='*' )
     def api_state_get(self, **kw):
