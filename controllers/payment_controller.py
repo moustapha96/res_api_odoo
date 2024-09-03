@@ -743,31 +743,8 @@ class PaymentREST(http.Controller):
             token_status = data.get('token_status')
             payment_date = datetime.datetime.now()
 
+
             payment_details = request.env['payment.details'].sudo().search([('id', '=', id)], limit=1)
-            if payment_details.payment_state == "completed":
-                return request.make_response(
-                   json.dumps({
-                        'id': payment_details.id,
-                        'transaction_id': payment_details.transaction_id,
-                        'amount': payment_details.amount,
-                        'currency': payment_details.currency,
-                        'payment_method': payment_details.payment_method,
-                        'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
-                        'order_id': payment_details.order_id,
-                        'order_name': payment_details.order_name,
-                        'order_type': payment_details.order_type,
-                        'partner_id': payment_details.partner_id,
-                        'payment_token': payment_details.payment_token,
-                        'payment_state': payment_details.payment_state,
-                        'url_facture': payment_details.url_facture,
-                        'customer_name' : payment_details.customer_name,
-                        'customer_email' : payment_details.customer_email,
-                        'customer_phone' : payment_details.customer_phone,
-                        'token_status': payment_details.token_status
-                    }),
-                    status=200,
-                    headers={'Content-Type': 'application/json'}
-                )
 
             if not payment_details:
                 return request.make_response(
@@ -775,41 +752,68 @@ class PaymentREST(http.Controller):
                     status=404,
                     headers={'Content-Type': 'application/json'}
                 )
+            else:
+            
+                if payment_details.payment_state == "completed":
+                    return request.make_response(
+                    json.dumps({
+                            'id': payment_details.id,
+                            'transaction_id': payment_details.transaction_id,
+                            'amount': payment_details.amount,
+                            'currency': payment_details.currency,
+                            'payment_method': payment_details.payment_method,
+                            'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
+                            'order_id': payment_details.order_id,
+                            'order_name': payment_details.order_name,
+                            'order_type': payment_details.order_type,
+                            'partner_id': payment_details.partner_id,
+                            'payment_token': payment_details.payment_token,
+                            'payment_state': payment_details.payment_state,
+                            'url_facture': payment_details.url_facture,
+                            'customer_name' : payment_details.customer_name,
+                            'customer_email' : payment_details.customer_email,
+                            'customer_phone' : payment_details.customer_phone,
+                            'token_status': payment_details.token_status
+                        }),
+                        status=200,
+                        headers={'Content-Type': 'application/json'}
+                    )
+                else:
+                    #  si payment details existe et payment_state est different de completed
+                    # Mettre à jour les champs avec les nouvelles valeurs
+                    payment_details.write({
+                        'payment_state': payment_state,
+                        'payment_date': payment_date,
+                        'url_facture': url_facture,
+                        'customer_name' : customer_name,
+                        'customer_email' : customer_email,
+                        'customer_phone' : customer_phone,
+                        'token_status': True
+                    })
 
-            # Mettre à jour les champs avec les nouvelles valeurs
-            payment_details.write({
-                'payment_state': payment_state,
-                'payment_date': payment_date,
-                'url_facture': url_facture,
-                'customer_name' : customer_name,
-                'customer_email' : customer_email,
-                'customer_phone' : customer_phone,
-                'token_status': token_status
-            })
-
-            return request.make_response(
-                json.dumps({
-                        'id': payment_details.id,
-                        'transaction_id': payment_details.transaction_id,
-                        'amount': payment_details.amount,
-                        'currency': payment_details.currency,
-                        'payment_method': payment_details.payment_method,
-                        'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
-                        'order_id': payment_details.order_id,
-                        'order_name': payment_details.order_name,
-                        'order_type': payment_details.order_type,
-                        'partner_id': payment_details.partner_id,
-                        'payment_token': payment_details.payment_token,
-                        'payment_state': payment_details.payment_state,
-                        'url_facture': payment_details.url_facture,
-                        'customer_name' : payment_details.customer_name,
-                        'customer_email' : payment_details.customer_email,
-                        'customer_phone' : payment_details.customer_phone,
-                        'token_status': payment_details.token_status
-                    }),
-                    status=200,
-                    headers={'Content-Type': 'application/json'}
-                )
+                    return request.make_response(
+                        json.dumps({
+                                'id': payment_details.id,
+                                'transaction_id': payment_details.transaction_id,
+                                'amount': payment_details.amount,
+                                'currency': payment_details.currency,
+                                'payment_method': payment_details.payment_method,
+                                'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
+                                'order_id': payment_details.order_id,
+                                'order_name': payment_details.order_name,
+                                'order_type': payment_details.order_type,
+                                'partner_id': payment_details.partner_id,
+                                'payment_token': payment_details.payment_token,
+                                'payment_state': payment_details.payment_state,
+                                'url_facture': payment_details.url_facture,
+                                'customer_name' : payment_details.customer_name,
+                                'customer_email' : payment_details.customer_email,
+                                'customer_phone' : payment_details.customer_phone,
+                                'token_status': payment_details.token_status
+                            }),
+                            status=200,
+                            headers={'Content-Type': 'application/json'}
+                        )
 
         except Exception as e:
             return request.make_response(
