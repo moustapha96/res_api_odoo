@@ -9,214 +9,145 @@ _logger = logging.getLogger(__name__)
 
 class PaymentREST(http.Controller):
 
-    # Dictionnaire en mémoire pour stocker les détails des paiements
-    payment_details_memory = {}
+ 
 
-    @http.route('/api/precommande/<id>/payment', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
-    def api_create_payment_preorder(self, id ):
-        try:
-            order = request.env['sale.order'].sudo().search([ ('id', '=', id) ], limit=1)
-            partner = request.env['res.partner'].sudo().search([('id', '=', order.partner_id.id)], limit=1)
-            company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1) #company : My Company (San Francisco) id = 1
-            payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
-            journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ])  # type = sale & company id = 1  ==> journal id = 1 / si journal id = 7 : CASH
-            payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
-                    ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1) # si journal est cash (id = 7)  et payment method inbound == payment method line id  = 1
+   
+    # @http.route('/api/commande/<id>/payment', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
+    # # @check_permissions
+    # def api_create_payment_order(self, id ):
+    #     try:
+    #         order = request.env['sale.order'].sudo().search([ ('id', '=', id) ], limit=1)
+    #         partner = request.env['res.partner'].sudo().search([('id', '=', order.partner_id.id)], limit=1)
+    #         company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1) #company : My Company (San Francisco) id = 1
 
+    #         _logger.info(f'partner {partner.email} ')
+    #         _logger.info(f'company {company.name} ')
 
-            # Par defaut
-            # journal = request.env['account.journal'].sudo().search([('id', '=', 7 )] , limit=1)
-            # payment_method = request.env['account.payment.method'].sudo().search([ ( 'id', '=', 1 ) ], limit=1)
-            # payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([('id', '=', 1) ], limit=1)
+    #         # journal = request.env['account.journal'].sudo().search([('id', '=', 7) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH (en local )
+    #         journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'),( 'company_id', '=', company.id ) ], limit=1)  # type = CASH1 id= 7 & company_id = 1  ==> journal id = 7 / journal id = 7 : CASH
+    #         # journal = request.env['account.journal'].sudo().search([('code', '=', 'sale'),( 'company_id', '=', company.id ) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+    #         # journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+    #         _logger.info(f'JOURNAL {journal.id} ')
+    #         payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
+    #         payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
+    #                 ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1) # si journal est cash (id = 7)  et payment method inbound ==> payment method line id  = 1
+    #         # on a pas besoin de payment method line 
 
-            user = request.env['res.users'].sudo().search([('id', '=', request.env.uid)], limit=1)
-            if not user or user._is_public():
-                admin_user = request.env.ref('base.user_admin')
-                request.env = request.env(user=admin_user.id)
-
-
-            # enregistrement payment
-            if order :
-                _logger.info( f"journal  {journal} journal  : {journal.id} " )
-                _logger.info( f"payment method line  {payment_method_line_vr.id}  " )
-                account_payment = request.env['account.payment'].sudo().create({
-                    'payment_type': 'inbound',
-                    'partner_type': 'customer',
-                    'partner_id': partner.id,
-                    'amount': order.first_payment_amount,
-                    'journal_id': journal.id,
-                    'currency_id': partner.currency_id.id,
-                    'payment_method_line_id': 1,
-                    'payment_method_id': payment_method.id, # inbound
-                    'sale_id': order.id,
-                    'is_reconciled': True,
-                    # 'move_id': new_invoice.id
-                })
-                if account_payment:
-                    account_payment.action_post()
-                    order.write({
-                        'first_payment_state': True
-                    })
-
-                    return request.make_response(
-                            json.dumps({
-                                'id': order.id,
-                                'name': order.name,
-                                'partner_id': order.partner_id.id,
-                                'type_sale': order.type_sale,
-                                'currency_id': order.currency_id.id,
-                                'company_id': order.company_id.id,
-                                'commitment_date': order.commitment_date.isoformat(),
-                                'state': order.state,
-                                'invoice_status': order.invoice_status,
-                                'first_payment_date': order.first_payment_date.isoformat() if order.first_payment_date else None,
-                                'second_payment_date': order.second_payment_date.isoformat() if order.second_payment_date else None,
-                                'third_payment_date': order.third_payment_date.isoformat() if order.third_payment_date else None,
-
-                                'first_payment_amount': order.first_payment_amount,
-                                'second_payment_amount': order.second_payment_amount,
-                                'third_payment_amount': order.third_payment_amount,
-
-                                'first_payment_state': order.first_payment_state,
-                                'second_payment_state': order.second_payment_state,
-                                'third_payment_state': order.third_payment_state,
-
-                                'invoice_id': account_payment.move_id.id or None ,
-                                'is_reconciled': account_payment.is_reconciled,
-                                'payment_id': account_payment.id,
-                                'payment_name': account_payment.name,
-                                'sale_order': account_payment.sale_id.id,
-                                'move_id': account_payment.move_id.id,
-                                'move_name': account_payment.move_id.name,
-                                # 'payment_state': new_invoice.payment_state,
-                                # 'invoice_lines': [
-                                #     {
-                                #         'id': invoice_line.id,
-                                #         'product_id': invoice_line.product_id.id,
-                                #         'quantity': invoice_line.quantity,
-                                #         'price_unit': invoice_line.price_unit,
-                                #         'company_id': invoice_line.company_id.id,
-                                #         'currency_id': invoice_line.currency_id.id,
-                                #         'partner_id': invoice_line.partner_id.id,
-                                #         'ref': invoice_line.ref
-                                #     } for invoice_line in new_invoice.invoice_line_ids
-                                # ],
-                            }),
-                            headers={'Content-Type': 'application/json'}
-                        )
-            else:
-                return request.make_response(
-                            json.dumps({'erreur': 'precommande non trouvé' }),
-                            headers={'Content-Type': 'application/json'}
-                        )
-
-        except ValueError as e:
-            return request.make_response(
-                json.dumps({'status': 'error', 'message': str(e)}),
-                headers={'Content-Type': 'application/json'}
-            )
+    #         _logger.info(f'journal {journal} ')
+    #         _logger.info(f'journal {payment_method} ')
+    #         user = request.env['res.users'].sudo().browse(request.env.uid)
+    #         if not user or user._is_public():
+    #             admin_user = request.env.ref('base.user_admin')
+    #             request.env = request.env(user=admin_user.id)
 
 
-    @http.route('/api/commande/<id>/payment', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
-    # @check_permissions
-    def api_create_payment_order(self, id ):
-        try:
-            order = request.env['sale.order'].sudo().search([ ('id', '=', id) ], limit=1)
-            partner = request.env['res.partner'].sudo().search([('id', '=', order.partner_id.id)], limit=1)
-            company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1) #company : My Company (San Francisco) id = 1
+    #         # enregistrement payment
+    #         if order :
+    #             account_payment = request.env['account.payment'].sudo().create({
+    #                 'payment_type': 'inbound',
+    #                 'partner_type': 'customer',
+    #                 'partner_id': partner.id,
+    #                 'amount': order.amount_total,
+    #                 'journal_id': journal.id,
+    #                 'currency_id': journal.currency_id.id, #42
+    #                 'payment_method_line_id': 1,
+    #                 'payment_method_id': payment_method.id, # inbound
+    #                 'sale_id': order.id,
+    #             })
+    #             if account_payment:
+    #                 account_payment.action_post()
 
-            _logger.info(f'partner {partner.email} ')
-            _logger.info(f'company {company.name} ')
+    #                 # Création de la facture
+    #                 # new_invoice = request.env['account.move'].sudo().create({
+    #                 #     'move_type': 'out_invoice',
+    #                 #     'amount_total' : order.amount_total,
+    #                 #     'invoice_date': datetime.datetime.now() ,
+    #                 #     'invoice_date_due': datetime.datetime.now(),
+    #                 #     'invoice_line_ids': [],
+    #                 #     'ref': 'Facture '+ order.name,
+    #                 #     'journal_id': journal_facture.id,
+    #                 #     'partner_id': partner.id,
+    #                 #     'company_id':company.id,
+    #                 #     'currency_id': partner.currency_id.id,
+    #                 #     # 'payment_id': account_payment.id,
+    #                 #     'sale_id': order.id
+    #                 # })
+    #                 # if new_invoice:
+    #                 #     # Création des lignes de facture
+    #                 #     order_lines = request.env['sale.order.line'].sudo().search([('order_id','=', order.id ) ])
+    #                 #     for order_line in order_lines:
+    #                 #         product_id = order_line.product_id.id
+    #                 #         quantity = order_line.product_uom_qty
+    #                 #         price_unit = order_line.price_unit
 
-            # journal = request.env['account.journal'].sudo().search([('id', '=', 7) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH (en local )
-            journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'),( 'company_id', '=', company.id ) ], limit=1)  # type = CASH1 id= 7 & company_id = 1  ==> journal id = 7 / journal id = 7 : CASH
-            # journal = request.env['account.journal'].sudo().search([('code', '=', 'sale'),( 'company_id', '=', company.id ) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
-            # journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
-            _logger.info(f'JOURNAL {journal.id} ')
-            payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
-            payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
-                    ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1) # si journal est cash (id = 7)  et payment method inbound ==> payment method line id  = 1
-            # on a pas besoin de payment method line 
-
-            _logger.info(f'journal {journal} ')
-            _logger.info(f'journal {payment_method} ')
-            user = request.env['res.users'].sudo().browse(request.env.uid)
-            if not user or user._is_public():
-                admin_user = request.env.ref('base.user_admin')
-                request.env = request.env(user=admin_user.id)
+    #                 #         invoice_line = request.env['account.move.line'].sudo().create({
+    #                 #             'move_id': new_invoice.id,
+    #                 #             'product_id': product_id,
+    #                 #             'quantity': quantity,
+    #                 #             'price_unit': price_unit,
+    #                 #             'company_id': company.id,
+    #                 #             'currency_id': company.currency_id.id,
+    #                 #             'partner_id': partner.id,
+    #                 #             'ref': 'Facture ' + order.name,
+    #                 #             'journal_id': journal_facture.id,
+    #                 #             'name': order.name,
+    #                 #         })
 
 
-            # enregistrement payment
-            if order :
-                if order.advance_payment_status != 'paid':
-                    account_payment = request.env['account.payment'].sudo().create({
-                        'payment_type': 'inbound',
-                        'partner_type': 'customer',
-                        'partner_id': partner.id,
-                        'amount': order.amount_total,
-                        'journal_id': journal.id,
-                        'currency_id': journal.currency_id.id, #42
-                        'payment_method_line_id': 1,
-                        'payment_method_id': payment_method.id, # inbound
-                        'sale_id': order.id,
-                    })
-                    if account_payment:
-                        account_payment.action_post()
-                        order.action_confirm()
-                    
-                        # Reconcilier le paiement avec la facture
-                        # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
-                    # Création de la facture
-                
-                    return request.make_response(
-                            json.dumps({
-                                'id': order.id,
-                                'name': order.name,
-                                'partner_id': order.partner_id.id,
-                                'type_sale': order.type_sale,
-                                'currency_id': order.currency_id.id,
-                                'company_id': order.company_id.id,
-                                # 'commitment_date': order.commitment_date.isoformat(),
-                                'state': order.state,
-                                'amount_total': order.amount_total,
-                                'invoice_status': order.invoice_status
-                            }),
-                             status=200,
-                            headers={'Content-Type': 'application/json'}
-                        )
-                else:
-                    return request.make_response(
-                        json.dumps({
-                            'id': order.id,
-                            'name': order.name,
-                            'partner_id': order.partner_id.id,
-                            'type_sale': order.type_sale,
-                            'currency_id': order.currency_id.id,
-                            'company_id': order.company_id.id,
-                            # 'commitment_date': order.commitment_date.isoformat(),
-                            'state': order.state,
-                            'amount_total': order.amount_total,
-                            'invoice_status': order.invoice_status
-                        }),
-                         status=200,
-                        headers={'Content-Type': 'application/json'}
-                    )
-            else:
-                return request.make_response(
-                            json.dumps({'erreur': 'commande non trouvé' }),
-                            headers={'Content-Type': 'application/json'}
-                        )
+    #                     # new_invoice.action_post()
+    #                 # order.action_confirm()
+    #                  # Création automatique de la facture et liaison du paiement
+    #                 order.action_confirm()
+                  
+    #                 # Reconcilier le paiement avec la facture
+    #                 # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
+    #             # Création de la facture
+            
+    #             return request.make_response(
+    #                     json.dumps({
+    #                         'id': order.id,
+    #                         'name': order.name,
+    #                         'partner_id': order.partner_id.id,
+    #                         'type_sale': order.type_sale,
+    #                         'currency_id': order.currency_id.id,
+    #                         'company_id': order.company_id.id,
+    #                         # 'commitment_date': order.commitment_date.isoformat(),
+    #                         'state': order.state,
+    #                         'amount_total': order.amount_total,
+    #                         # 'invoice_id': account_payment.move_id.id or None ,
+    #                         # 'is_reconciled': account_payment.is_reconciled,
+    #                         # 'payment_id': account_payment.id,
+    #                         # 'payment_name': account_payment.name,
+    #                         # 'sale_order': account_payment.sale_id.id,
+    #                         # 'move_id': account_payment.move_id.id,
+    #                         # 'move_name': account_payment.move_id.name,
+    #                         'invoice_status': order.invoice_status
+    #                     }),
+    #                     headers={'Content-Type': 'application/json'}
+    #                 )
+    #         else:
+    #             return request.make_response(
+    #                         json.dumps({'erreur': 'precommande non trouvé' }),
+    #                         headers={'Content-Type': 'application/json'}
+    #                     )
 
-        except ValueError as e:
-            return request.make_response(
-                json.dumps({'status': 'error', 'message': str(e)}),
-                headers={'Content-Type': 'application/json'}
-            )
+    #     except ValueError as e:
+    #         return request.make_response(
+    #             json.dumps({'status': 'error', 'message': str(e)}),
+    #             headers={'Content-Type': 'application/json'}
+    #         )
 
 
     # methode qu'on utilise
-    @http.route('/api/precommande/<id>/payment/<amount>', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
-    def api_create_payment_rang_preorder(self, id , amount):
+    @http.route('/api/precommande/<id>/payment/<amount>/<token>', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
+    def api_create_payment_rang_preorder(self, id , amount , token):
+
+
+        user = request.env['res.users'].sudo().browse(request.env.uid)
+        if not user or user._is_public():
+            admin_user = request.env.ref('base.user_admin')
+            request.env = request.env(user=admin_user.id)
+
         try:
             order = request.env['sale.order'].sudo().search([ ('id', '=', id) ], limit=1)
             partner = request.env['res.partner'].sudo().search([('id', '=', order.partner_id.id)], limit=1)
@@ -232,83 +163,92 @@ class PaymentREST(http.Controller):
             payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
             # payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([ ('payment_method_id', '=', payment_method.id), ( 'journal_id', '=', journal.id ) ], limit=1)  # si journal est cash (id = 7)  et payment method inbound ==> payment method line id  = 1
 
-            user = request.env['res.users'].sudo().search([('id', '=', request.env.uid)], limit=1)
-            if not user or user._is_public():
-                admin_user = request.env.ref('base.user_admin')
-                request.env = request.env(user=admin_user.id)
+            # user = request.env['res.users'].sudo().search([('id', '=', request.env.uid)], limit=1)
+            # if not user or user._is_public():
+            #     admin_user = request.env.ref('base.user_admin')
+            #     request.env = request.env(user=admin_user.id)
 
             # enregistrement payment
             if order :
 
-                account_payment = request.env['account.payment'].sudo().create({
-                    'payment_type': 'inbound',
-                    'partner_type': 'customer',
-                    'partner_id': partner.id,
-                    'amount': amount,
-                    'journal_id': journal.id,
-                    'currency_id': partner.currency_id.id,
-                    'payment_method_line_id': 1,
-                    'payment_method_id': payment_method.id, # inbound
-                    'sale_id': order.id,
-                    'is_reconciled': True,
-                    # 'move_id': new_invoice.id
-                })
-                if account_payment:
-                    account_payment.action_post()
+                payment_details = request.env['payment.details'].search([('order_id', '=', order.id), ('payment_token', '=', token) ], limit=1)
 
-                    return request.make_response(
-                            json.dumps({
-                                'id': order.id,
-                                'name': order.name,
-                                'partner_id': order.partner_id.id,
-                                'type_sale': order.type_sale,
-                                'currency_id': order.currency_id.id,
-                                'company_id': order.company_id.id,
-                                'commitment_date': order.commitment_date.isoformat(),
-                                'state': order.state,
-                                'invoice_status': order.invoice_status,
-                                'first_payment_date': order.first_payment_date.isoformat() if order.first_payment_date else None,
-                                'second_payment_date': order.second_payment_date.isoformat() if order.second_payment_date else None,
-                                'third_payment_date': order.third_payment_date.isoformat() if order.third_payment_date else None,
+                if payment_details.token_status == False and payment_details.payment_state == "completed":
+                    account_payment = request.env['account.payment'].sudo().create({
+                        'payment_type': 'inbound',
+                        'partner_type': 'customer',
+                        'partner_id': partner.id,
+                        'amount': amount,
+                        'journal_id': journal.id,
+                        'currency_id': partner.currency_id.id,
+                        'payment_method_line_id': 1,
+                        'payment_method_id': payment_method.id, # inbound
+                        'sale_id': order.id,
+                        'is_reconciled': True,
+                        # 'move_id': new_invoice.id
+                    })
+                    if account_payment:
+                        account_payment.action_post()
+                        payment_details.write({'token_status': True})
 
-                                'first_payment_amount': order.first_payment_amount,
-                                'second_payment_amount': order.second_payment_amount,
-                                'third_payment_amount': order.third_payment_amount,
+                        return request.make_response(
+                                json.dumps({
+                                    'id': order.id,
+                                    'name': order.name,
+                                    'partner_id': order.partner_id.id,
+                                    'type_sale': order.type_sale,
+                                    'currency_id': order.currency_id.id,
+                                    'company_id': order.company_id.id,
+                                    'commitment_date': order.commitment_date.isoformat(),
+                                    'state': order.state,
+                                    'invoice_status': order.invoice_status,
+                                    'first_payment_date': order.first_payment_date.isoformat() if order.first_payment_date else None,
+                                    'second_payment_date': order.second_payment_date.isoformat() if order.second_payment_date else None,
+                                    'third_payment_date': order.third_payment_date.isoformat() if order.third_payment_date else None,
 
-                                'first_payment_state': order.first_payment_state,
-                                'second_payment_state': order.second_payment_state,
-                                'third_payment_state': order.third_payment_state,
+                                    'first_payment_amount': order.first_payment_amount,
+                                    'second_payment_amount': order.second_payment_amount,
+                                    'third_payment_amount': order.third_payment_amount,
 
-                                'invoice_id': account_payment.move_id.id or None ,
-                                'is_reconciled': account_payment.is_reconciled,
-                                'payment_id': account_payment.id,
-                                'payment_name': account_payment.name,
-                                'sale_order': account_payment.sale_id.id,
-                                'move_id': account_payment.move_id.id,
-                                'move_name': account_payment.move_id.name,
-                                'amount_untaxed': order.amount_untaxed or None,
-                                'amount_tax': order.amount_tax or None,
-                                'amount_total': order.amount_total or None,
-                                'amount_residual': order.amount_residual,
-                                # 'payment_state': new_invoice.payment_state,
-                                # 'invoice_lines': [
-                                #     {
-                                #         'id': invoice_line.id,
-                                #         'product_id': invoice_line.product_id.id,
-                                #         'quantity': invoice_line.quantity,
-                                #         'price_unit': invoice_line.price_unit,
-                                #         'company_id': invoice_line.company_id.id,
-                                #         'currency_id': invoice_line.currency_id.id,
-                                #         'partner_id': invoice_line.partner_id.id,
-                                #         'ref': invoice_line.ref
-                                #     } for invoice_line in new_invoice.invoice_line_ids
-                                # ],
-                            }),
-                            headers={'Content-Type': 'application/json'}
-                        )
+                                    'first_payment_state': order.first_payment_state,
+                                    'second_payment_state': order.second_payment_state,
+                                    'third_payment_state': order.third_payment_state,
+
+                                    'invoice_id': account_payment.move_id.id or None ,
+                                    'is_reconciled': account_payment.is_reconciled,
+                                    'payment_id': account_payment.id,
+                                    'payment_name': account_payment.name,
+                                    'sale_order': account_payment.sale_id.id,
+                                    'move_id': account_payment.move_id.id,
+                                    'move_name': account_payment.move_id.name,
+                                    'amount_untaxed': order.amount_untaxed or None,
+                                    'amount_tax': order.amount_tax or None,
+                                    'amount_total': order.amount_total or None,
+                                    'amount_residual': order.amount_residual,
+                                    # 'payment_state': new_invoice.payment_state,
+                                    # 'invoice_lines': [
+                                    #     {
+                                    #         'id': invoice_line.id,
+                                    #         'product_id': invoice_line.product_id.id,
+                                    #         'quantity': invoice_line.quantity,
+                                    #         'price_unit': invoice_line.price_unit,
+                                    #         'company_id': invoice_line.company_id.id,
+                                    #         'currency_id': invoice_line.currency_id.id,
+                                    #         'partner_id': invoice_line.partner_id.id,
+                                    #         'ref': invoice_line.ref
+                                    #     } for invoice_line in new_invoice.invoice_line_ids
+                                    # ],
+                                }),
+                                headers={'Content-Type': 'application/json'}
+                            )
+                elif payment_details.token_status == True and payment_details.payment_state == "completed":
+                    return self._make_response({'error': 'Payment déja valide'}, 400)
+                else:
+                    return self._make_response({'error': 'Payment non valide'}, 400)
+
             else:
                 return request.make_response(
-                            json.dumps({'erreur': 'precommande non trouvé' }),
+                            json.dumps({'erreur': 'précommande non trouvé' }),
                             headers={'Content-Type': 'application/json'}
                         )
 
@@ -704,6 +644,7 @@ class PaymentREST(http.Controller):
 
     @http.route('/api/payment/update/<id>', methods=['PUT'], type='http', auth='none', cors='*' ,csrf=False)
     def update_payment_by_id(self, id, **kw):
+
         try:
             data = json.loads(request.httprequest.data)
             payment_state = data.get('payment_state')
@@ -749,42 +690,43 @@ class PaymentREST(http.Controller):
                         status=200,
                         headers={'Content-Type': 'application/json'}
                     )
-                else:
-                    #  si payment details existe et payment_state est different de completed
-                    # Mettre à jour les champs avec les nouvelles valeurs
-                    payment_details.write({
-                        'payment_state': payment_state,
-                        'payment_date': payment_date,
-                        'url_facture': url_facture,
-                        'customer_name' : customer_name,
-                        'customer_email' : customer_email,
-                        'customer_phone' : customer_phone,
-                        'token_status': True
-                    })
+                    
+                #  si payment details existe et payment_state est different de completed
 
-                    return request.make_response(
-                        json.dumps({
-                                'id': payment_details.id,
-                                'transaction_id': payment_details.transaction_id,
-                                'amount': payment_details.amount,
-                                'currency': payment_details.currency,
-                                'payment_method': payment_details.payment_method,
-                                'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
-                                'order_id': payment_details.order_id,
-                                'order_name': payment_details.order_name,
-                                'order_type': payment_details.order_type,
-                                'partner_id': payment_details.partner_id,
-                                'payment_token': payment_details.payment_token,
-                                'payment_state': payment_details.payment_state,
-                                'url_facture': payment_details.url_facture,
-                                'customer_name' : payment_details.customer_name,
-                                'customer_email' : payment_details.customer_email,
-                                'customer_phone' : payment_details.customer_phone,
-                                'token_status': payment_details.token_status
-                            }),
-                            status=200,
-                            headers={'Content-Type': 'application/json'}
-                        )
+                # Mettre à jour les champs avec les nouvelles valeurs
+                payment_details.write({
+                    'payment_state': payment_state,
+                    'payment_date': payment_date,
+                    'url_facture': url_facture,
+                    'customer_name' : customer_name,
+                    'customer_email' : customer_email,
+                    'customer_phone' : customer_phone,
+                    # 'token_status': True
+                })
+
+                return request.make_response(
+                    json.dumps({
+                            'id': payment_details.id,
+                            'transaction_id': payment_details.transaction_id,
+                            'amount': payment_details.amount,
+                            'currency': payment_details.currency,
+                            'payment_method': payment_details.payment_method,
+                            'payment_date':  payment_details.payment_date.isoformat() if payment_details.payment_date else None,
+                            'order_id': payment_details.order_id,
+                            'order_name': payment_details.order_name,
+                            'order_type': payment_details.order_type,
+                            'partner_id': payment_details.partner_id,
+                            'payment_token': payment_details.payment_token,
+                            'payment_state': payment_details.payment_state,
+                            'url_facture': payment_details.url_facture,
+                            'customer_name' : payment_details.customer_name,
+                            'customer_email' : payment_details.customer_email,
+                            'customer_phone' : payment_details.customer_phone,
+                            'token_status': payment_details.token_status
+                        }),
+                        status=200,
+                        headers={'Content-Type': 'application/json'}
+                    )
 
         except Exception as e:
             return request.make_response(
@@ -792,3 +734,85 @@ class PaymentREST(http.Controller):
                 status=400,
                 headers={'Content-Type': 'application/json'}
             )
+        
+
+
+    # autre fonction 
+    @http.route('/api/commande/<int:id>/payment', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
+    def api_create_payment_orderp(self, id):
+
+        user = request.env['res.users'].sudo().browse(request.env.uid)
+        if not user or user._is_public():
+            admin_user = request.env.ref('base.user_admin')
+            request.env = request.env(user=admin_user.id)
+
+
+        try:
+            order = request.env['sale.order'].sudo().browse(id)
+            if not order:
+                return self._make_response({'error': 'Commande non trouvé'}, 404)
+
+            partner = order.partner_id
+            company = partner.company_id
+
+            _logger.info(f'Partner: {partner.email}, Company: {company.name}')
+
+            journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'), ('company_id', '=', company.id)], limit=1)
+            payment_method = request.env['account.payment.method'].sudo().search([('payment_type', '=', 'inbound')], limit=1)
+            payment_method_line = request.env['account.payment.method.line'].sudo().search([('payment_method_id', '=', payment_method.id), ('journal_id', '=', journal.id)], limit=1)
+
+            _logger.info(f'Journal: {journal.id}')
+
+            payment_details = request.env['payment.details'].search([('order_id', '=', order.id)], limit=1)
+            _logger.info(f'payment : {payment_details.payment_state, payment_details.token_status }')
+            if payment_details and payment_details.token_status == False and payment_details.payment_state == "completed":
+                payment_details.write({'token_status': True})
+                if order.advance_payment_status == 'paid':
+                    return self._make_response(self._order_to_dict(order), 200)
+                else:
+                    return self._create_payment_and_confirm_order(order, partner, journal, payment_method, payment_method_line)
+
+            elif payment_details and payment_details.token_status == True:
+                return self._make_response({'error': 'Payment deja valide'}, 200)
+
+            else:
+                return self._make_response({'error': 'Payment non valide'}, 400)
+
+        except ValueError as e:
+            return self._make_response({'status': 'error', 'message': str(e)}, 500)
+
+    def _create_payment_and_confirm_order(self, order, partner, journal, payment_method, payment_method_line):
+        account_payment = request.env['account.payment'].sudo().create({
+            'payment_type': 'inbound',
+            'partner_type': 'customer',
+            'partner_id': partner.id,
+            'amount': order.amount_total,
+            'journal_id': journal.id,
+            'currency_id': journal.currency_id.id,
+            'payment_method_line_id': payment_method_line.id,
+            'payment_method_id': payment_method.id,
+            'sale_id': order.id,
+        })
+        account_payment.action_post()
+        order.action_confirm()
+        return self._make_response(self._order_to_dict(order), 200)
+
+    def _order_to_dict(self, order):
+        return {
+            'id': order.id,
+            'name': order.name,
+            'partner_id': order.partner_id.id,
+            'type_sale': order.type_sale,
+            'currency_id': order.currency_id.id,
+            'company_id': order.company_id.id,
+            'state': order.state,
+            'amount_total': order.amount_total,
+            'invoice_status': order.invoice_status
+        }
+
+    def _make_response(self, data, status):
+        return request.make_response(
+            json.dumps(data),
+            status=status,
+            headers={'Content-Type': 'application/json'}
+        )
