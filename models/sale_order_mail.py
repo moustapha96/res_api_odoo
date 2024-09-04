@@ -143,26 +143,25 @@ class SaleOrderMail(models.Model):
 
         email_from = mail_server.smtp_user
         email_to = partner.email
-        emails = [partner.email , 'bara.mboup@ccbm.sn' ,'alhusseinkhouma0@gmail.com' ]
 
-        for email in emails:
-            # Définir les valeurs du message e-mail
-            email_values = {
-                'email_from': email_from,
-                'email_to': email,
-                'subject': subject,
-                'body_html': body_html,
-                'state': 'outgoing',
-            }
-            # Construire le message e-mail
-            mail_mail = request.env['mail.mail'].sudo().create(email_values)
-            try:
-                mail_mail.send()
-                return {'status': 'success', 'message': 'Mail envoyé avec succès'}
-            except Exception as e:
-                _logger.error(f'Error sending email: {str(e)}')
-                return {'status': 'error', 'message': str(e)}
+        # Définir les valeurs du message e-mail
+        email_values = {
+            'email_from': email_from,
+            'email_to': email_to,
+            'subject': subject,
+            'body_html': body_html,
+            'state': 'outgoing',
+        }
+        # Construire le message e-mail
+        mail_mail = request.env['mail.mail'].sudo().create(email_values)
+        try:
+            mail_mail.send()
+            return {'status': 'success', 'message': 'Mail envoyé avec succès'}
+        except Exception as e:
+            _logger.error(f'Error sending email: {str(e)}')
+            return {'status': 'error', 'message': str(e)}
 
+    
 
     def send_preorder_confirmation_mail(self):
         # Récupérer ou créer une instance de IrMailServer
@@ -353,25 +352,23 @@ class SaleOrderMail(models.Model):
 
         email_from = mail_server.smtp_user
         email_to = partner.email
-        emails = [partner.email , 'bara.mboup@ccbm.sn' ,'alhusseinkhouma0@gmail.com' ]
 
-        for email in emails:
         # Définir les valeurs du message e-mail
-            email_values = {
-                'email_from': email_from,
-                'email_to': email,
-                'subject': subject,
-                'body_html': body_html,
-                'state': 'outgoing',
-            }
-            # Construire le message e-mail
-            mail_mail = request.env['mail.mail'].sudo().create(email_values)
-            try:
-                mail_mail.send()
-                return {'status': 'success', 'message': 'Mail envoyé avec succès'}
-            except Exception as e:
-                _logger.error(f'Error sending email: {str(e)}')
-                return {'status': 'error', 'message': str(e)}
+        email_values = {
+            'email_from': email_from,
+            'email_to': email_to,
+            'subject': subject,
+            'body_html': body_html,
+            'state': 'outgoing',
+        }
+        # Construire le message e-mail
+        mail_mail = request.env['mail.mail'].sudo().create(email_values)
+        try:
+            mail_mail.send()
+            return {'status': 'success', 'message': 'Mail envoyé avec succès'}
+        except Exception as e:
+            _logger.error(f'Error sending email: {str(e)}')
+            return {'status': 'error', 'message': str(e)}
         
 
     # mail apres payment precommande
@@ -563,26 +560,26 @@ class SaleOrderMail(models.Model):
         '''
 
         email_from = mail_server.smtp_user
-        emails = [partner.email , 'bara.mboup@ccbm.sn' ,'alhusseinkhouma0@gmail.com' ]
         email_to = partner.email
-        for email in emails:
-            # Définir les valeurs du message e-mail
-            email_values = {
-                'email_from': email_from,
-                'email_to': email,
-                'subject': subject,
-                'body_html': body_html,
-                'state': 'outgoing',
-            }
-            # Construire le message e-mail
-            mail_mail = request.env['mail.mail'].sudo().create(email_values)
-            try:
-                mail_mail.send()
-                return {'status': 'success', 'message': 'Mail envoyé avec succès'}
-            except Exception as e:
-                _logger.error(f'Error sending email: {str(e)}')
-                return {'status': 'error', 'message': str(e)}
-            
+
+        # Définir les valeurs du message e-mail
+        email_values = {
+            'email_from': email_from,
+            'email_to': email_to,
+            'subject': subject,
+            'body_html': body_html,
+            'state': 'outgoing',
+        }
+        # Construire le message e-mail
+        mail_mail = request.env['mail.mail'].sudo().create(email_values)
+        try:
+            mail_mail.send()
+            return {'status': 'success', 'message': 'Mail envoyé avec succès'}
+        except Exception as e:
+            _logger.error(f'Error sending email: {str(e)}')
+            return {'status': 'error', 'message': str(e)}
+        
+
 
     @api.model
     def action_confirm(self):
