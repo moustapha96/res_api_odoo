@@ -226,10 +226,10 @@ class userREST(http.Controller):
             preorder_count = order_obj.sudo().search_count([('partner_id.id', '=', partner.id), ('state', 'not in', ['cancel', 'draft']), ('type_sale', '=', 'preorder')])
 
             # Compter les commandes livrées
-            delivered_count = order_obj.sudo().search_count([('partner_id.id', '=', partner.id), ('state', '=', 'done')])
+            delivered_count = order_obj.sudo().search_count([('partner_id.id', '=', partner.id), ('state', '=', 'delivered')])
 
             # Compter les commandes en cours
-            progress_count = order_obj.sudo().search_count([('partner_id.id', '=', partner.id), ('state', 'in', ['progress', 'manual_progress']), ('type_sale', 'in', ['order', 'preorder'])])
+            progress_count = order_obj.sudo().search_count([('partner_id.id', '=', partner.id), ('state', 'in', ['sent', 'to_delivered']), ('type_sale', 'in', ['order', 'preorder'])])
            
             return http.Response(json.dumps({
                 'user_name': partner.name,
