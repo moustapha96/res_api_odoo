@@ -1,11 +1,11 @@
 from odoo import models, fields, api
 
-class AccountPayment(models.Model):
+class InvoiceOrder(models.Model):
     _inherit = 'account.payment'
 
     @api.model
     def create(self, vals):
-        payment = super(AccountPayment, self).create(vals)
+        payment = super(InvoiceOrder, self).create(vals)
         order = self.env['sale.order'].sudo().search([('id', '=', vals.get('sale_id'))], limit=1)
         if order:
             self._create_and_link_invoice(payment, order)

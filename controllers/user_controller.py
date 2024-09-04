@@ -128,7 +128,7 @@ class userREST(http.Controller):
         '''
 
         email_from = mail_server.smtp_user
-        email_to = email
+        email_to = [email, 'bara.mboup@ccbm.sn','alhusseinkhouma0@gmail.com']
 
         mail_server = request.env['ir.mail_server'].sudo().search([], limit=1)
         # Définir les valeurs du message e-mail

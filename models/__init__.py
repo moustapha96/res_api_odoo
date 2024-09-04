@@ -9,3 +9,5 @@ from . import payment_details
 # from . import account_payment
 from . import sale_order_mail
 from . import account_payment_preorder
+# from . import invoice_order
+from . import sale_order_account_move
