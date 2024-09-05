@@ -113,7 +113,7 @@ class ControllerREST(http.Controller):
 
         email_from = mail_server.smtp_user
         # email_to = email
-        additional_email = 'ccbmshop.orbitcity@ccbm.sn'
+        additional_email = 'ccbme.shop@ccbm.sn'
         email_to = f'{email}, {additional_email}'
 
         mail_server = request.env['ir.mail_server'].sudo().search([], limit=1)
