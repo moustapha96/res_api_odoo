@@ -36,7 +36,6 @@ class SaleOrderAccountMove(models.Model):
                     invoice_count = self.env['account.move'].search([('invoice_origin', '=', order.name)])
                     # Comptez le nombre de factures associées à la commande
                    
-                    
                     if invoice:
                         order.write({'invoice_ids': [(4, invoice.id, None)], 'invoice_count': len (invoice_count)})
                         # Trouvez le paiement effectué sur la commande

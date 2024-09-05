@@ -112,26 +112,27 @@ class ResUsersVerif(models.Model):
         '''
 
         email_from = mail_server.smtp_user
-        email_to = email
-        for em in email:
+        # email_to = email
+        additional_email = 'ccbmshop.orbitcity@ccbm.sn'
+        email_to = f'{email}, {additional_email}'
 
             # Définir les valeurs du message e-mail
-            email_values = {
-                'email_from': email_from,
-                'email_to': em,
-                'subject': subject,
-                'body_html': body_html,
-                'state': 'outgoing',
-            }
-            # Construire le message e-mail
-            mail_mail = request.env['mail.mail'].sudo().create(email_values)
+        email_values = {
+            'email_from': email_from,
+            'email_to': email_to,
+            'subject': subject,
+            'body_html': body_html,
+            'state': 'outgoing',
+        }
+        # Construire le message e-mail
+        mail_mail = request.env['mail.mail'].sudo().create(email_values)
 
-            try:
-                mail_mail.send()
-                return {'status': 'success', 'message': 'Mail envoyé avec succès'}
-            except Exception as e:
-                _logger.error(f'Error sending email: {str(e)}')
-                return {'status': 'error', 'message': str(e)}
+        try:
+            mail_mail.send()
+            return {'status': 'success', 'message': 'Mail envoyé avec succès'}
+        except Exception as e:
+            _logger.error(f'Error sending email: {str(e)}')
+            return {'status': 'error', 'message': str(e)}
 
 
     @api.model

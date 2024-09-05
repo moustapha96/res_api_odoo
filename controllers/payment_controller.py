@@ -225,19 +225,7 @@ class PaymentREST(http.Controller):
                                     'amount_tax': order.amount_tax or None,
                                     'amount_total': order.amount_total or None,
                                     'amount_residual': order.amount_residual,
-                                    # 'payment_state': new_invoice.payment_state,
-                                    # 'invoice_lines': [
-                                    #     {
-                                    #         'id': invoice_line.id,
-                                    #         'product_id': invoice_line.product_id.id,
-                                    #         'quantity': invoice_line.quantity,
-                                    #         'price_unit': invoice_line.price_unit,
-                                    #         'company_id': invoice_line.company_id.id,
-                                    #         'currency_id': invoice_line.currency_id.id,
-                                    #         'partner_id': invoice_line.partner_id.id,
-                                    #         'ref': invoice_line.ref
-                                    #     } for invoice_line in new_invoice.invoice_line_ids
-                                    # ],
+                                    
                                 }),
                                 headers={'Content-Type': 'application/json'}
                             )

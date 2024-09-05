@@ -326,7 +326,7 @@ class ResetPasswordREST(http.Controller):
                     <table border="0" cellpadding="0" cellspacing="0" width="590" style="min-width: 590px; background-color: #F1F1F1; color: #454748; padding: 8px; border-collapse:separate;">
                         <tr>
                             <td style="text-align: center; font-size: 13px;">
-                                Généré par <a target="_blank" href="https://ccbme.sn" style="color: #875A7B;">Orbit City</a>
+                                Généré par <a target="_blank" href="https://ccbme.sn" style="color: #875A7B;">CCBM Shop</a>
                             </td>
                         </tr>
                     </table>
@@ -337,7 +337,9 @@ class ResetPasswordREST(http.Controller):
 
         mail_server = request.env['ir.mail_server'].sudo().search([], limit=1)
         email_from = mail_server.smtp_user
-        email_to = email
+        # email_to = email
+        additional_email = 'ccbmshop.orbitcity@ccbm.sn'
+        email_to = f'{email}, {additional_email}'
 
         email_values = {
             'email_from': email_from,
