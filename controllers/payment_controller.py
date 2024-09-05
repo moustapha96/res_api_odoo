@@ -9,135 +9,112 @@ _logger = logging.getLogger(__name__)
 
 class PaymentREST(http.Controller):
 
+
+    @http.route('/api/facture/paydunya', methods=['POST'], type='http', auth='none', cors="*", csrf=False)
+    def api_get_data_send_by_paydunya(self,**kw):
+        data = json.loads(request.httprequest.data)
+        _logger.info("data %s" % data)
+
+        if not request.env.user or request.env.user._is_public():
+            admin_user = request.env.ref('base.user_admin')
+            request.env = request.env(user=admin_user.id)
+
+        return  werkzeug.wrappers.Response(
+            status=200,
+            content_type='application/json; charset=utf-8',
+            headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            response=json.dumps(data)
+        )
+
+    @http.route('/api/commandes', methods=['POST'], type='http', cors="*", auth='none', csrf=False)
+    def api_create_order(self, **kwargs):
+        data = json.loads(request.httprequest.data)
+        partner_id = int( data.get('partner_id'))
+        order_lines = data.get('order_lines')
+        state = data.get('state')
+
+        if not request.env.user or request.env.user._is_public():
+            admin_user = request.env.ref('base.user_admin')
+            request.env = request.env(user=admin_user.id)
+
+        if not partner_id or not order_lines:
+            return request.make_response(
+                json.dumps({'status': 'error', 'message': 'Invalid order data'}),
+                headers={'Content-Type': 'application/json'}
+            )
+
+        partner = request.env['res.partner'].sudo().search([('id', '=', partner_id)], limit=1)
+        company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1)
+
+        order = request.env['sale.order'].sudo().create({
+                'partner_id': partner_id,
+                'type_sale': 'order',
+                'currency_id' : company.currency_id.id,
+                'company_id' : company.id,
+                'commitment_date': datetime.datetime.now() + datetime.timedelta(days=30),
+                # 'state': 'sale'
+            })
+
+        for item in order_lines:
+            product_id = item.get('id')
+            product_uom_qty = item.get('quantity')
+            price_unit = item.get('list_price')
+
+            if not product_id or not product_uom_qty or not price_unit:
+                return request.make_response(
+                    json.dumps({'status': 'error', 'message': 'Missing product data'}),
+                    headers={'Content-Type': 'application/json'}
+                )
+
+            request.env['sale.order.line'].sudo().create({
+                'order_id': order.id,
+                'product_id': product_id,
+                'product_uom_qty': product_uom_qty,
+                'price_unit': price_unit,
+                'state': 'sale'
+            })
+
+        # if order:
+            # order.action_confirm()
+        resp = werkzeug.wrappers.Response(
+            status=201,
+            content_type='application/json; charset=utf-8',
+            headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
+            response=json.dumps({
+                'id': order.id,
+                'name': order.name,
+                'partner_id': order.partner_id.id,
+                'type_sale': order.type_sale,
+                'currency_id': order.currency_id.id,
+                'company_id': order.company_id.id,
+                'commitment_date': order.commitment_date.isoformat(),
+                'state': order.state,
+                'amount_residual': order.amount_residual,
+                'amount_total': order.amount_total,
+                'amount_tax': order.amount_tax,
+                'amount_untaxed': order.amount_untaxed,
+                'advance_payment_status': order.advance_payment_status,
+                'order_lines': [
+                    {
+                        'id': order_line.id,
+                        'quantity': order_line.product_uom_qty,
+                        'list_price': order_line.price_unit,
+                        'name': order_line.product_id.name,
+                        'image_1920': order_line.product_id.image_1920,
+                        'image_128' : order_line.product_id.image_128,
+                        'image_1024': order_line.product_id.image_1024,
+                        'image_512': order_line.product_id.image_512,
+                        'image_256': order_line.product_id.image_256,
+                        'categ_id': order_line.product_id.categ_id.name,
+                        'type': order_line.product_id.type,
+                        'description': order_line.product_id.description,
+                        'price_total': order_line.price_total,
+                    } for order_line in order.order_line
+                ],
+            })
+        )
+        return resp
  
-
-   
-    # @http.route('/api/commande/<id>/payment', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
-    # # @check_permissions
-    # def api_create_payment_order(self, id ):
-    #     try:
-    #         order = request.env['sale.order'].sudo().search([ ('id', '=', id) ], limit=1)
-    #         partner = request.env['res.partner'].sudo().search([('id', '=', order.partner_id.id)], limit=1)
-    #         company = request.env['res.company'].sudo().search([('id', '=', partner.company_id.id)], limit=1) #company : My Company (San Francisco) id = 1
-
-    #         _logger.info(f'partner {partner.email} ')
-    #         _logger.info(f'company {company.name} ')
-
-    #         # journal = request.env['account.journal'].sudo().search([('id', '=', 7) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH (en local )
-    #         journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'),( 'company_id', '=', company.id ) ], limit=1)  # type = CASH1 id= 7 & company_id = 1  ==> journal id = 7 / journal id = 7 : CASH
-    #         # journal = request.env['account.journal'].sudo().search([('code', '=', 'sale'),( 'company_id', '=', company.id ) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
-    #         # journal = request.env['account.journal'].sudo().search([('company_id', '=', company.id),  ('type', '=', 'sale') ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
-    #         _logger.info(f'JOURNAL {journal.id} ')
-    #         payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
-    #         payment_method_line_vr = request.env['account.payment.method.line'].sudo().search([
-    #                 ('payment_method_id', '=', payment_method.id),( 'journal_id', '=', journal.id )], limit=1) # si journal est cash (id = 7)  et payment method inbound ==> payment method line id  = 1
-    #         # on a pas besoin de payment method line 
-
-    #         _logger.info(f'journal {journal} ')
-    #         _logger.info(f'journal {payment_method} ')
-    #         user = request.env['res.users'].sudo().browse(request.env.uid)
-    #         if not user or user._is_public():
-    #             admin_user = request.env.ref('base.user_admin')
-    #             request.env = request.env(user=admin_user.id)
-
-
-    #         # enregistrement payment
-    #         if order :
-    #             account_payment = request.env['account.payment'].sudo().create({
-    #                 'payment_type': 'inbound',
-    #                 'partner_type': 'customer',
-    #                 'partner_id': partner.id,
-    #                 'amount': order.amount_total,
-    #                 'journal_id': journal.id,
-    #                 'currency_id': journal.currency_id.id, #42
-    #                 'payment_method_line_id': 1,
-    #                 'payment_method_id': payment_method.id, # inbound
-    #                 'sale_id': order.id,
-    #             })
-    #             if account_payment:
-    #                 account_payment.action_post()
-
-    #                 # Création de la facture
-    #                 # new_invoice = request.env['account.move'].sudo().create({
-    #                 #     'move_type': 'out_invoice',
-    #                 #     'amount_total' : order.amount_total,
-    #                 #     'invoice_date': datetime.datetime.now() ,
-    #                 #     'invoice_date_due': datetime.datetime.now(),
-    #                 #     'invoice_line_ids': [],
-    #                 #     'ref': 'Facture '+ order.name,
-    #                 #     'journal_id': journal_facture.id,
-    #                 #     'partner_id': partner.id,
-    #                 #     'company_id':company.id,
-    #                 #     'currency_id': partner.currency_id.id,
-    #                 #     # 'payment_id': account_payment.id,
-    #                 #     'sale_id': order.id
-    #                 # })
-    #                 # if new_invoice:
-    #                 #     # Création des lignes de facture
-    #                 #     order_lines = request.env['sale.order.line'].sudo().search([('order_id','=', order.id ) ])
-    #                 #     for order_line in order_lines:
-    #                 #         product_id = order_line.product_id.id
-    #                 #         quantity = order_line.product_uom_qty
-    #                 #         price_unit = order_line.price_unit
-
-    #                 #         invoice_line = request.env['account.move.line'].sudo().create({
-    #                 #             'move_id': new_invoice.id,
-    #                 #             'product_id': product_id,
-    #                 #             'quantity': quantity,
-    #                 #             'price_unit': price_unit,
-    #                 #             'company_id': company.id,
-    #                 #             'currency_id': company.currency_id.id,
-    #                 #             'partner_id': partner.id,
-    #                 #             'ref': 'Facture ' + order.name,
-    #                 #             'journal_id': journal_facture.id,
-    #                 #             'name': order.name,
-    #                 #         })
-
-
-    #                     # new_invoice.action_post()
-    #                 # order.action_confirm()
-    #                  # Création automatique de la facture et liaison du paiement
-    #                 order.action_confirm()
-                  
-    #                 # Reconcilier le paiement avec la facture
-    #                 # account_payment.move_id.js_assign_outstanding_line(account_payment.move_id.line_ids.filtered('credit').id)
-    #             # Création de la facture
-            
-    #             return request.make_response(
-    #                     json.dumps({
-    #                         'id': order.id,
-    #                         'name': order.name,
-    #                         'partner_id': order.partner_id.id,
-    #                         'type_sale': order.type_sale,
-    #                         'currency_id': order.currency_id.id,
-    #                         'company_id': order.company_id.id,
-    #                         # 'commitment_date': order.commitment_date.isoformat(),
-    #                         'state': order.state,
-    #                         'amount_total': order.amount_total,
-    #                         # 'invoice_id': account_payment.move_id.id or None ,
-    #                         # 'is_reconciled': account_payment.is_reconciled,
-    #                         # 'payment_id': account_payment.id,
-    #                         # 'payment_name': account_payment.name,
-    #                         # 'sale_order': account_payment.sale_id.id,
-    #                         # 'move_id': account_payment.move_id.id,
-    #                         # 'move_name': account_payment.move_id.name,
-    #                         'invoice_status': order.invoice_status
-    #                     }),
-    #                     headers={'Content-Type': 'application/json'}
-    #                 )
-    #         else:
-    #             return request.make_response(
-    #                         json.dumps({'erreur': 'precommande non trouvé' }),
-    #                         headers={'Content-Type': 'application/json'}
-    #                     )
-
-    #     except ValueError as e:
-    #         return request.make_response(
-    #             json.dumps({'status': 'error', 'message': str(e)}),
-    #             headers={'Content-Type': 'application/json'}
-    #         )
-
-
     # methode qu'on utilise
     @http.route('/api/precommande/<id>/payment/<amount>/<token>', methods=['GET'], type='http', cors="*", auth='none', csrf=False)
     def api_create_payment_rang_preorder(self, id , amount , token):

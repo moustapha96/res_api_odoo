@@ -13,8 +13,6 @@ class ContactController(http.Controller):
     @http.route('/api/sendContact', methods=['POST'], type='http', auth='none', cors="*", csrf=False)
     def send_welcome_mail(self, **kw):
         data = json.loads(request.httprequest.data)
-
-
         email = data.get('email')
         nom = data.get('nom')
         sujet = data.get('sujet')
