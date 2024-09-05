@@ -144,7 +144,7 @@ class SaleOrderMail(models.Model):
         email_from = mail_server.smtp_user
         # email_to = partner.email
         # additional_email = 'bara.mboup@ccbm.sn'
-        additional_email = 'ccbme.shop@ccbm.sn'
+        additional_email = 'shop@ccbm.sn'
         email_to = f'{partner.email}, {additional_email}'
        
 
@@ -357,7 +357,7 @@ class SaleOrderMail(models.Model):
         email_from = mail_server.smtp_user
         # email_to = partner.email
         # additional_email = 'bara.mboup@ccbm.sn'
-        additional_email = 'ccbme.shop@ccbm.sn'
+        additional_email = 'shop@ccbm.sn'
         email_to = f'{partner.email}, {additional_email}'
 
         # Définir les valeurs du message e-mail
@@ -569,7 +569,7 @@ class SaleOrderMail(models.Model):
         email_from = mail_server.smtp_user
         # email_to = partner.email
         # additional_email = 'bara.mboup@ccbm.sn'
-        additional_email = 'ccbme.shop@ccbm.sn'
+        additional_email = 'shop@ccbm.sn'
         email_to = f'{partner.email}, {additional_email}'
 
         # Définir les valeurs du message e-mail

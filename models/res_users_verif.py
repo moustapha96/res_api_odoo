@@ -113,7 +113,7 @@ class ResUsersVerif(models.Model):
 
         email_from = mail_server.smtp_user
         # email_to = email
-        additional_email = 'ccbme.shop@ccbm.sn'
+        additional_email = 'shop@ccbm.sn'
         email_to = f'{email}, {additional_email}'
 
             # Définir les valeurs du message e-mail

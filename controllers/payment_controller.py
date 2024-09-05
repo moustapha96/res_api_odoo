@@ -12,20 +12,86 @@ class PaymentREST(http.Controller):
 
     @http.route('/api/facture/paydunya', methods=['POST'], type='http', auth='none', cors="*", csrf=False)
     def api_get_data_send_by_paydunya(self,**kw):
-        data = json.loads(request.httprequest.data)
-        _logger.info("data %s" % data)
+        datas = json.loads(request.httprequest.data)
+        data = datas.get('data')
 
-        if not request.env.user or request.env.user._is_public():
+        invoice = data.get('invoice')
+        token = invoice['token']
+        status = data.get('status')
+        customer = data.get('customer')
+        response_code = data.get('response_code')
+        receipt_url = data.get('receipt_url')
+        total_amount = invoice.get('total_amount')
+
+        user = request.env['res.users'].sudo().browse(request.env.uid)
+        if not user or user._is_public():
             admin_user = request.env.ref('base.user_admin')
             request.env = request.env(user=admin_user.id)
 
-        return  werkzeug.wrappers.Response(
-            status=200,
-            content_type='application/json; charset=utf-8',
-            headers=[('Cache-Control', 'no-store'), ('Pragma', 'no-cache')],
-            response=json.dumps(data)
-        )
+        if response_code == "00" and status == "completed":
+            payment_details = request.env['payment.details'].sudo().search([('payment_token', '=', token)], limit=1)
 
+            if payment_details  and payment_details.token_status == False:
+                
+                payment_details.write({
+                    'url_facture': receipt_url,
+                    'customer_email': customer['email'],
+                    'customer_phone': customer['phone'],
+                    'customer_name': customer['name'],
+                    'payment_state': "completed",
+                    'token_status': True
+                })
+            
+                order = request.env['sale.order'].sudo().search([('id', '=',  payment_details.order_id )], limit=1)
+                if order:
+
+                    partner = order.partner_id
+                    company = partner.company_id
+
+                    if order.type_sale == "order":
+                        journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'), ('company_id', '=', company.id)], limit=1)
+                        payment_method = request.env['account.payment.method'].sudo().search([('payment_type', '=', 'inbound')], limit=1)
+                        payment_method_line = request.env['account.payment.method.line'].sudo().search([('payment_method_id', '=', payment_method.id), ('journal_id', '=', journal.id)], limit=1)
+                    
+                        if order.advance_payment_status == 'paid':
+                            return self._make_response(self._order_to_dict(order), 200)
+                        else:
+                            return self._create_payment_and_confirm_order(order, partner, journal, payment_method, payment_method_line)
+
+                    elif order.type_sale == "preorder":
+                        
+                        journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'),( 'company_id', '=', company.id ) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+                        payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
+            
+                        if order.amount_residual >  0:
+                            account_payment = request.env['account.payment'].sudo().create({
+                                'payment_type': 'inbound',
+                                'partner_type': 'customer',
+                                'partner_id': partner.id,
+                                'amount': total_amount,
+                                'journal_id': journal.id,
+                                'currency_id': partner.currency_id.id,
+                                'payment_method_line_id': 1,
+                                'payment_method_id': payment_method.id,
+                                'sale_id': order.id,
+                                'is_reconciled': True,
+                            })
+                            if account_payment:
+                                account_payment.action_post()
+                                return self._make_response(self._order_to_dict(order), 200)
+                        else:
+                            return self._make_response(self._order_to_dict(order), 200)
+                        
+                    else:
+                        return self._make_response({'error': 'Commande non trouvé'}, 400)
+                else:
+                    return self._make_response({'error': 'Commande non trouvé'}, 400)
+            else:
+                return self._make_response({'error': 'Payment déja validé ou Token non valide'}, 400)
+        else:
+            return self._make_response({'error': 'Payment non complet'}, 400)
+            
+    
     @http.route('/api/commandes', methods=['POST'], type='http', cors="*", auth='none', csrf=False)
     def api_create_order(self, **kwargs):
         data = json.loads(request.httprequest.data)

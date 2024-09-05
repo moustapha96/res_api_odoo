@@ -102,7 +102,7 @@ class ContactController(http.Controller):
         # Récupérer ou créer une instance de IrMailServer 
         mail_server = request.env['ir.mail_server'].sudo().search([], limit=1)        
         email_from = mail_server.smtp_user
-        additional_email = 'ccbme.shop@ccbm.sn'
+        additional_email = 'shop@ccbm.sn'
         email_to = f'{email}, {additional_email}'
 
 
