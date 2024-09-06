@@ -42,44 +42,44 @@ class PaymentREST(http.Controller):
                     'token_status': True
                 })
             
-                order = request.env['sale.order'].sudo().search([('id', '=',  payment_details.order_id )], limit=1)
-                if order:
+                # order = request.env['sale.order'].sudo().search([('id', '=',  payment_details.order_id )], limit=1)
+                # if order:
 
-                    partner = order.partner_id
-                    company = partner.company_id
+                #     partner = order.partner_id
+                #     company = partner.company_id
 
-                    if order.type_sale == "order":
-                        journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'), ('company_id', '=', company.id)], limit=1)
-                        payment_method = request.env['account.payment.method'].sudo().search([('payment_type', '=', 'inbound')], limit=1)
-                        payment_method_line = request.env['account.payment.method.line'].sudo().search([('payment_method_id', '=', payment_method.id), ('journal_id', '=', journal.id)], limit=1)
-                    
-                        if order.advance_payment_status != 'paid':
-                            return self._create_payment_and_confirm_order(order, partner, journal, payment_method, payment_method_line)
-
-                    elif order.type_sale == "preorder":
+                #     if order.type_sale == "order":
+                #         journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'), ('company_id', '=', company.id)], limit=1)
+                #         payment_method = request.env['account.payment.method'].sudo().search([('payment_type', '=', 'inbound')], limit=1)
+                #         payment_method_line = request.env['account.payment.method.line'].sudo().search([('payment_method_id', '=', payment_method.id), ('journal_id', '=', journal.id)], limit=1)
                         
-                        journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'),( 'company_id', '=', company.id ) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
-                        payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
+                #         if order.advance_payment_status != 'paid':
+                #             return self._create_payment_and_confirm_order(order, partner, journal, payment_method, payment_method_line)
+
+                #     elif order.type_sale == "preorder":
+                        
+                #         journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'),( 'company_id', '=', company.id ) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+                #         payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
             
-                        if order.amount_residual >  0:
-                            account_payment = request.env['account.payment'].sudo().create({
-                                'payment_type': 'inbound',
-                                'partner_type': 'customer',
-                                'partner_id': partner.id,
-                                'amount': total_amount,
-                                'journal_id': journal.id,
-                                'currency_id': partner.currency_id.id,
-                                'payment_method_line_id': 1,
-                                'payment_method_id': payment_method.id,
-                                'sale_id': order.id,
-                                'is_reconciled': True,
-                            })
-                            if account_payment:
-                                account_payment.action_post()
-                    else:
-                        return self._make_response({'status': 'success'}, 200)
-                else:
-                    return self._make_response({'status': 'success'}, 200)
+                #         if order.amount_residual >  0:
+                #             account_payment = request.env['account.payment'].sudo().create({
+                #                 'payment_type': 'inbound',
+                #                 'partner_type': 'customer',
+                #                 'partner_id': partner.id,
+                #                 'amount': total_amount,
+                #                 'journal_id': journal.id,
+                #                 'currency_id': partner.currency_id.id,
+                #                 'payment_method_line_id': 1,
+                #                 'payment_method_id': payment_method.id,
+                #                 'sale_id': order.id,
+                #                 'is_reconciled': True,
+                #             })
+                #             if account_payment:
+                #                 account_payment.action_post()
+                #     else:
+                #         return self._make_response({'status': 'success'}, 200)
+                # else:
+                #     return self._make_response({'status': 'success'}, 200)
             else:
                 return self._make_response({'status': 'success'}, 200)
         else:
