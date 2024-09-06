@@ -529,6 +529,10 @@ def check_permissions(func):
     def wrapper(self, *args, **kwargs):
         _logger.info("Check permissions...")
         
+        exempt_routes = ['/api/facture/paydunya']
+
+        if request.httprequest.path in exempt_routes:
+            return func(self, *args, **kwargs)
         # Get access token from http header
         access_token = request.httprequest.headers.get('access_token')
         if not access_token:
