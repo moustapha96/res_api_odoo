@@ -28,6 +28,7 @@ class PaymentREST(http.Controller):
     @add_default_headers
     def api_get_data_send_by_paydunya(self,**kw):
 
+        _logger.info(f"Request headers: {request.httprequest.headers}")
         if not request.httprequest.data:
             return error_response(400, 'no_data', 'No data was provided in the request body.')
         
