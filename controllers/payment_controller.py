@@ -5,12 +5,29 @@ import datetime
 import logging
 import json
 _logger = logging.getLogger(__name__)
-
+from odoo.http import request, Response
 
 class PaymentREST(http.Controller):
 
+    def add_default_headers(func):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            # Proceed with original function
+            response = func(self, *args, **kwargs)
+            
+            # Add headers to response
+            if isinstance(response, Response):
+                if 'Content-Type' not in response.headers:
+                    response.headers['Content-Type'] = 'application/json'
+                if 'Accept' not in response.headers:
+                    response.headers['Accept'] = 'application/json'
+            return response
+
+        return wrapper
+
 
     @http.route('/api/facture/paydunya', methods=['POST'], type='http', auth='none', cors="*",  csrf=False)
+    @add_default_headers
     def api_get_data_send_by_paydunya(self,**kw):
 
         if not request.httprequest.data:

@@ -529,32 +529,25 @@ def check_permissions(func):
     def wrapper(self, *args, **kwargs):
         _logger.info("Check permissions...")
         
-
-        if 'Content-Type' not in request.httprequest.headers:
-            _logger.info("Adding default Content-Type header")
-            request.httprequest.headers['Content-Type'] = 'application/json'
-        
-        if 'Accept' not in request.httprequest.headers:
-            _logger.info("Adding default Accept header")
-            request.httprequest.headers['Accept'] = 'application/json'
-
         # Get access token from http header
         access_token = request.httprequest.headers.get('access_token')
-        if not access_token:
-            _logger.info("No access token provided, proceeding as admin user.")
-            admin_user = request.env.ref('base.user_admin')
-            request.env = request.env(user=admin_user.id)
+        if access_token:
+            try:
+                # Try to validate access token
+                access_token_data = token_store.fetch_by_access_token(request.env, access_token)
+                
+                if access_token_data:
+                    # Set session UID from current access token
+                    request.session.uid = access_token_data['user_id']
+            except Exception as e:
+                _logger.warning(f"Invalid or missing access token: {e}. Proceeding as admin user.")
         else:
-            access_token_data = token_store.fetch_by_access_token(request.env, access_token)
-            if not access_token_data:
-                return error_response_401__invalid_token()
-
-            request.session.uid = access_token_data['user_id']
+            _logger.info("No access token provided, proceeding as admin user.")
 
       
-        # admin_user = request.env.ref('base.user_admin')
-        # request.session.uid = admin_user.id  # Set session to admin
-        # request.env = request.env(user=admin_user.id)
+        admin_user = request.env.ref('base.user_admin')
+        request.session.uid = admin_user.id  # Set session to admin
+        request.env = request.env(user=admin_user.id)
 
             
 
