@@ -544,15 +544,18 @@ def check_permissions(func):
         else:
             _logger.info("No access token provided, proceeding as admin user.")
 
-        user = request.env['res.users'].sudo().browse(request.session.uid)
-        if not user or user._is_public():
-            admin_user = request.env.ref('base.user_admin')
-            request.env = request.env(user=admin_user.id)
+      
+        admin_user = request.env.ref('base.user_admin')
+        request.session.uid = admin_user.id  # Set session to admin
+        request.env = request.env(user=admin_user.id)
 
-        user_context = request.env(request.cr, request.session.uid)['res.users'].context_get().copy()
-        user_context['uid'] = request.session.uid
+            
+
+        user_context = request.env['res.users'].sudo().browse(admin_user.id).context_get().copy()
+        user_context['uid'] = admin_user.id
         request.update_context(**user_context)
         request.session.context = request.context
+
 
         # if not access_token:
         #     error_descrip = "No access token was provided in request header!"

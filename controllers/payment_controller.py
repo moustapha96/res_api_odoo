@@ -10,7 +10,7 @@ _logger = logging.getLogger(__name__)
 class PaymentREST(http.Controller):
 
 
-    @http.route('/api/facture/paydunya', methods=['POST'], type='http', auth='none', cors="*",  csrf=False)
+    @http.route('/api/facture/paydunya', methods=[ 'GET', 'POST'], type='http', auth='none', cors="*",  csrf=False)
     def api_get_data_send_by_paydunya(self,**kw):
 
         if not request.httprequest.data:
