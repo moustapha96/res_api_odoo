@@ -53,9 +53,7 @@ class PaymentREST(http.Controller):
                         payment_method = request.env['account.payment.method'].sudo().search([('payment_type', '=', 'inbound')], limit=1)
                         payment_method_line = request.env['account.payment.method.line'].sudo().search([('payment_method_id', '=', payment_method.id), ('journal_id', '=', journal.id)], limit=1)
                     
-                        if order.advance_payment_status == 'paid':
-                            return self._make_response(self._order_to_dict(order), 200)
-                        else:
+                        if order.advance_payment_status != 'paid':
                             return self._create_payment_and_confirm_order(order, partner, journal, payment_method, payment_method_line)
 
                     elif order.type_sale == "preorder":
@@ -78,19 +76,14 @@ class PaymentREST(http.Controller):
                             })
                             if account_payment:
                                 account_payment.action_post()
-                                return self._make_response(self._order_to_dict(order), 200)
-                        else:
-                            return self._make_response(self._order_to_dict(order), 200)
-                        
                     else:
-                        return self._make_response({'error': 'Commande non trouvé'}, 400)
+                        return self._make_response({'status': 'success'}, 200)
                 else:
-                    return self._make_response({'error': 'Commande non trouvé'}, 400)
+                    return self._make_response({'status': 'success'}, 200)
             else:
-                return self._make_response({'error': 'Payment déja validé ou Token non valide'}, 400)
+                return self._make_response({'status': 'success'}, 200)
         else:
-            return self._make_response({'error': 'Payment non complet'}, 400)
-            
+            return self._make_response({'status': 'success'}, 200)
     
     @http.route('/api/commandes', methods=['POST'], type='http', cors="*", auth='none', csrf=False)
     def api_create_order(self, **kwargs):
@@ -825,7 +818,8 @@ class PaymentREST(http.Controller):
         })
         account_payment.action_post()
         order.action_confirm()
-        return self._make_response(self._order_to_dict(order), 200)
+        # return self._make_response(self._order_to_dict(order), 200)
+        return self._make_response({'status': 'success'}, 200)
 
     def _order_to_dict(self, order):
         return {
