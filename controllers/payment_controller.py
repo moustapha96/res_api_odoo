@@ -8,19 +8,17 @@ _logger = logging.getLogger(__name__)
 from odoo.http import request, Response
 
 class PaymentREST(http.Controller):
-
     def add_default_headers(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
             # Proceed with original function
             response = func(self, *args, **kwargs)
-            
-            # Add headers to response
+
+            # Add headers to response if it's an instance of Response
             if isinstance(response, Response):
-                if 'Content-Type' not in response.headers:
-                    response.headers['Content-Type'] = 'application/json'
-                if 'Accept' not in response.headers:
-                    response.headers['Accept'] = 'application/json'
+                response.headers['Content-Type'] = 'application/json'
+                response.headers['Accept'] = 'application/json'
+            
             return response
 
         return wrapper
