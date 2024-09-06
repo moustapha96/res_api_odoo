@@ -190,7 +190,7 @@ class ControllerREST(http.Controller):
     
     # Read all (with optional filters, offset, limit, order, exclude_fields, include_fields):
     @http.route('/api/<string:model_name>', methods=['GET'], type='http', auth='none', cors=rest_cors_value)
-    @check_permissions
+    # @check_permissions
     def api__model_name__GET(self, model_name, **kw):
         model_available, schema, pre_schema, _ = self.define_schema_params(request, model_name, 'read_all')
         if not model_available:

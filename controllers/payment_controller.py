@@ -10,8 +10,12 @@ _logger = logging.getLogger(__name__)
 class PaymentREST(http.Controller):
 
 
-    @http.route('/api/facture/paydunya', methods=['POST'], type='http', auth='none', cors="*", csrf=False)
+    @http.route('/api/facture/paydunya', methods=['POST'], type='http', auth='none', cors="*",  csrf=False)
     def api_get_data_send_by_paydunya(self,**kw):
+
+        if not request.httprequest.data:
+            return error_response(400, 'no_data', 'No data was provided in the request body.')
+        
         data = json.loads(request.httprequest.data)
        
 
@@ -83,6 +87,15 @@ class PaymentREST(http.Controller):
             else:
                 return self._make_response({'status': 'success'}, 200)
         else:
+            payment_details = request.env['payment.details'].sudo().search([('payment_token', '=', token)], limit=1)
+            payment_details.write({
+                'url_facture': receipt_url,
+                'customer_email': customer['email'],
+                'customer_phone': customer['phone'],
+                'customer_name': customer['name'],
+                'payment_state': status,
+                # 'token_status': True
+            })
             return self._make_response({'status': 'success'}, 200)
     
     @http.route('/api/commandes', methods=['POST'], type='http', cors="*", auth='none', csrf=False)
@@ -856,18 +869,17 @@ class PaymentREST(http.Controller):
         
         payment_details = request.env['payment.details'].sudo().search([('payment_token', '=', token)], limit=1)
         if payment_details:
-            if payment_details.token_status == False and payment_details.payment_state == "completed":
+            total_amount = payment_details.amount
+            order_id = payment_details.order_id
+            order = request.env['sale.order'].sudo().search([('id', '=',  order_id )], limit=1)
+            if order:
+                partner = order.partner_id
+                company = partner.company_id
 
-                payment_details.write({
-                    'token_status': True
-                })
-
-                total_amount = payment_details.amount
-                order_id = payment_details.order_id
-                order = request.env['sale.order'].sudo().search([('id', '=',  order_id )], limit=1)
-                if order:
-                    partner = order.partner_id
-                    company = partner.company_id
+                if payment_details.token_status == False and payment_details.payment_state == "completed":
+                    payment_details.write({
+                        'token_status': True
+                    })
 
                     if order.type_sale == "order" :
                         journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'), ('company_id', '=', company.id)], limit=1)
@@ -907,13 +919,15 @@ class PaymentREST(http.Controller):
 
                     else:
                         return self._make_response(self._order_to_dict(order), 200)
+                elif payment_details.token_status == True and payment_details.payment_state == "completed":
+                    return self._make_response(self._order_to_dict(order), 200)
                 else:
-                    return self._make_response({'error': 'Commande non trouvé'}, 400)
-
-            elif payment_details.token_status == True :
-                return self._make_response({'success': 'Payment déja comptabilisé'}, 200)
+                    return self._make_response({'error': 'Payment non valide'}, 400)
             else:
-                return self._make_response({'error': 'Payment non effectif ou token non valide'}, 400)
+                return self._make_response({'error': 'Commande non trouvé'}, 400)
+
+            
+            
         else:
             return self._make_response({'error': 'Payment non trouvé'}, 400)
        
