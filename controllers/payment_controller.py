@@ -856,13 +856,13 @@ class PaymentREST(http.Controller):
         
         payment_details = request.env['payment.details'].sudo().search([('payment_token', '=', token)], limit=1)
         if payment_details:
-            if payment_details.token_status == False:
+            if payment_details.token_status == False and payment_details.payment_state == "completed":
 
                 payment_details.write({
                     'token_status': True
                 })
 
-                total_amount = payment_details.total_amount
+                total_amount = payment_details.amount
                 order_id = payment_details.order_id
                 order = request.env['sale.order'].sudo().search([('id', '=',  order_id )], limit=1)
                 if order:
@@ -910,8 +910,10 @@ class PaymentREST(http.Controller):
                 else:
                     return self._make_response({'error': 'Commande non trouvé'}, 400)
 
+            elif payment_details.token_status == True :
+                return self._make_response({'success': 'Payment déja comptabilisé'}, 200)
             else:
-                return self._make_response({'error': 'Payment déjà validé'}, 400)
+                return self._make_response({'error': 'Payment non effectif ou token non valide'}, 400)
         else:
-            return self._make_response({'error': 'Payment non trouvé ou token non valide'}, 400)
+            return self._make_response({'error': 'Payment non trouvé'}, 400)
        
