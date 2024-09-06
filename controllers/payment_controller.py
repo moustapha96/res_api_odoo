@@ -768,8 +768,6 @@ class PaymentREST(http.Controller):
         if not user or user._is_public():
             admin_user = request.env.ref('base.user_admin')
             request.env = request.env(user=admin_user.id)
-
-
         try:
             order = request.env['sale.order'].sudo().browse(id)
             if not order:
@@ -818,8 +816,8 @@ class PaymentREST(http.Controller):
         })
         account_payment.action_post()
         order.action_confirm()
-        # return self._make_response(self._order_to_dict(order), 200)
-        return self._make_response({'status': 'success'}, 200)
+        return self._make_response(self._order_to_dict(order), 200)
+
 
     def _order_to_dict(self, order):
         return {
@@ -882,9 +880,10 @@ class PaymentREST(http.Controller):
                             return self._create_payment_and_confirm_order(order, partner, journal, payment_method, payment_method_line)
                         
                     elif order.type_sale == "preorder":
-                        journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH2'), ('company_id', '=', company.id)], limit=1)
-                        payment_method = request.env['account.payment.method'].sudo().search([('payment_type', '=', 'inbound')], limit=1)
+                        
 
+                        journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'),( 'company_id', '=', company.id ) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
+                        payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
                         payment_method_line = request.env['account.payment.method.line'].sudo().search([('payment_method_id', '=', payment_method.id), ('journal_id', '=', journal.id)], limit=1)
 
                         if order.amount_residual >  0:
@@ -912,7 +911,7 @@ class PaymentREST(http.Controller):
                     return self._make_response({'error': 'Commande non trouvé'}, 400)
 
             else:
-                return self._make_response({'error': 'Payment already done'}, 400)
+                return self._make_response({'error': 'Payment déjà validé'}, 400)
         else:
-            return self._make_response({'error': 'Payment not found'}, 404)
+            return self._make_response({'error': 'Payment non trouvé ou token non valide'}, 400)
        
