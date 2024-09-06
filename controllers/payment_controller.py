@@ -39,7 +39,7 @@ class PaymentREST(http.Controller):
                     'customer_phone': customer['phone'],
                     'customer_name': customer['name'],
                     'payment_state': "completed",
-                    'token_status': True
+                    # 'token_status': True
                 })
                 return self._make_response({'status': 'success'}, 200)
                 # order = request.env['sale.order'].sudo().search([('id', '=',  payment_details.order_id )], limit=1)
@@ -824,6 +824,7 @@ class PaymentREST(http.Controller):
     def _order_to_dict(self, order):
         return {
             'id': order.id,
+            'type_sale': order.type_sale,
             'name': order.name,
             'partner_id': order.partner_id.id,
             'type_sale': order.type_sale,
@@ -831,7 +832,9 @@ class PaymentREST(http.Controller):
             'company_id': order.company_id.id,
             'state': order.state,
             'amount_total': order.amount_total,
-            'invoice_status': order.invoice_status
+            'invoice_status': order.invoice_status,
+            'amount_total': order.amount_total,
+            'advance_payment_status': order.advance_payment_status
         }
 
     def _make_response(self, data, status):
@@ -843,14 +846,9 @@ class PaymentREST(http.Controller):
 
 
     # function qui a partir du token valide , faire le payment
-    @http.route('/api/payment/verify/<token>', methods=['PUT'], type='http', auth='none', cors="*", csrf=False)
+    @http.route('/api/payment/verify/<token>', methods=['GET'], type='http', auth='none', cors="*")
     def api_get_paydunya_by_token(self,token, **kw):
-        data = json.loads(request.httprequest.data)
-    
-        customer_email = data.get('email')
-        customer_phone = data.get('phone')
-        customer_name = data.get('name')
-        url_facture = data.get('url_facture')
+       
 
         user = request.env['res.users'].sudo().browse(request.env.uid)
         if not user or user._is_public():
@@ -863,11 +861,6 @@ class PaymentREST(http.Controller):
             if payment_details.token_status == False:
 
                 payment_details.write({
-                    'url_facture': url_facture,
-                    'customer_email': customer_email,
-                    'customer_phone': customer_phone,
-                    'customer_name': customer_name,
-                    'payment_state': "completed",
                     'token_status': True
                 })
 
@@ -881,7 +874,6 @@ class PaymentREST(http.Controller):
                     if order.type_sale == "order" :
                         journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'), ('company_id', '=', company.id)], limit=1)
                         payment_method = request.env['account.payment.method'].sudo().search([('payment_type', '=', 'inbound')], limit=1)
-
                         payment_method_line = request.env['account.payment.method.line'].sudo().search([('payment_method_id', '=', payment_method.id), ('journal_id', '=', journal.id)], limit=1)
 
                         if order.advance_payment_status == 'paid':
