@@ -17,6 +17,8 @@ class PaymentREST(http.Controller):
             return error_response(400, 'no_data', 'No data was provided in the request body.')
         
         data = json.loads(request.httprequest.data)
+        _logger.info(f'data: {data}')
+        _logger.info(f'data token: {data.get("invoice").get("token")}')
        
 
         invoice = data.get('invoice')
