@@ -530,39 +530,25 @@ def check_permissions(func):
         _logger.info("Check permissions...")
         
         # Get access token from http header
-
-        # access_token = request.httprequest.headers.get('access_token')
-
-        admin_user = request.env.ref('base.user_admin')
-        request.session.uid = admin_user.id  # Set session to admin
-        request.env = request.env(user=admin_user.id)
-
-        user_context = request.env['res.users'].sudo().browse(admin_user.id).context_get().copy()
-        user_context['uid'] = admin_user.id
+        access_token = request.httprequest.headers.get('access_token')
+        if not access_token:
+            error_descrip = "No access token was provided in request header!"
+            error = 'no_access_token'
+            _logger.error(error_descrip)
+            return error_response(400, error, error_descrip)
+        
+        # Validate access token
+        access_token_data = token_store.fetch_by_access_token(request.env, access_token)
+        if not access_token_data:
+            return error_response_401__invalid_token()
+        
+        # Set session UID from current access token
+        request.session.uid = access_token_data['user_id']
+        # Set user's context
+        user_context = request.env(request.cr, request.session.uid)['res.users'].context_get().copy()
+        user_context['uid'] = request.session.uid
         request.update_context(**user_context)
         request.session.context = request.context
-
-
-
-        # access_token = request.httprequest.headers.get('access_token')
-        # if not access_token:
-        #     error_descrip = "No access token was provided in request header!"
-        #     error = 'no_access_token'
-        #     _logger.error(error_descrip)
-        #     return error_response(400, error, error_descrip)
-        
-        # # Validate access token
-        # access_token_data = token_store.fetch_by_access_token(request.env, access_token)
-        # if not access_token_data:
-        #     return error_response_401__invalid_token()
-        
-        # # Set session UID from current access token
-        # request.session.uid = access_token_data['user_id']
-        # # Set user's context
-        # user_context = request.env(request.cr, request.session.uid)['res.users'].context_get().copy()
-        # user_context['uid'] = request.session.uid
-        # request.update_context(**user_context)
-        # request.session.context = request.context
         # Set website request object
         if not hasattr(request, 'website') and request.env['ir.module.module'].sudo().search([
           ('name', '=', 'website'), ('state', 'in', ['installed', 'to upgrade', 'to remove'])], limit=1):
