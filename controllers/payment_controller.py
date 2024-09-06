@@ -41,7 +41,7 @@ class PaymentREST(http.Controller):
                     'payment_state': "completed",
                     'token_status': True
                 })
-            
+                return self._make_response({'status': 'success'}, 200)
                 # order = request.env['sale.order'].sudo().search([('id', '=',  payment_details.order_id )], limit=1)
                 # if order:
 
