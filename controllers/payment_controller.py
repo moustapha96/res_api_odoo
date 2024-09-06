@@ -813,13 +813,13 @@ class PaymentREST(http.Controller):
                     return self._create_payment_and_confirm_order(order, partner, journal, payment_method, payment_method_line)
 
             elif payment_details and payment_details.token_status == True:
-                return self._make_response({'error': 'Payment deja valide'}, 200)
+                return self._make_response({'message': 'Payment deja valide'}, 200)
 
             else:
-                return self._make_response({'error': 'Payment non valide'}, 400)
+                return self._make_response({'message': 'Payment non valide'}, 200)
 
         except ValueError as e:
-            return self._make_response({'status': 'error', 'message': str(e)}, 500)
+            return self._make_response({'status': 'error', 'message': str(e)}, 400)
 
     def _create_payment_and_confirm_order(self, order, partner, journal, payment_method, payment_method_line):
         account_payment = request.env['account.payment'].sudo().create({
