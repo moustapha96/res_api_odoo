@@ -922,12 +922,12 @@ class PaymentREST(http.Controller):
                 elif payment_details.token_status == True and payment_details.payment_state == "completed":
                     return self._make_response(self._order_to_dict(order), 200)
                 else:
-                    return self._make_response({'error': 'Payment non valide'}, 400)
+                    return self._make_response({'message': 'Payment non valide'}, 200)
             else:
-                return self._make_response({'error': 'Commande non trouvé'}, 400)
+                return self._make_response({'message': 'Commande non trouvé'}, 200)
 
             
             
         else:
-            return self._make_response({'error': 'Payment non trouvé'}, 400)
+            return self._make_response({'message': 'Payment non trouvé'}, 200)
        
