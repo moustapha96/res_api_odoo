@@ -26,10 +26,11 @@ class PaymentREST(http.Controller):
             _logger.info(f'data token: {data.get("invoice").get("token")}')
         
 
-            invoice = data.get('invoice')
-            token = invoice['token']
+            token = data.get('invoice[token]')
             status = data.get('status')
-            customer = data.get('customer')
+            customer_email = data.get('customer[email]')
+            customer_phone = data.get('customer[phone]')
+            customer_name = data.get('customer[name]')
             response_code = data.get('response_code')
             receipt_url = data.get('receipt_url')
 
@@ -96,13 +97,15 @@ class PaymentREST(http.Controller):
                 payment_details = request.env['payment.details'].sudo().search([('payment_token', '=', token)], limit=1)
                 payment_details.write({
                     'url_facture': receipt_url,
-                    'customer_email': customer['email'],
-                    'customer_phone': customer['phone'],
-                    'customer_name': customer['name'],
+                    'customer_email':customer_email,
+                    'customer_phone': customer_phone,
+                    'customer_name': customer_name,
                     'payment_state': status,
                     # 'token_status': True
                 })
                 return self._make_response({'status': 'success'}, 200)
+        else:
+            return self._make_response({'status': 'success'}, 200)
     
     @http.route('/api/commandes', methods=['POST'], type='http', cors="*", auth='none', csrf=False)
     def api_create_order(self, **kwargs):
