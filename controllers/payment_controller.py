@@ -3,7 +3,8 @@ from .main import *
 import pdb
 import datetime
 import logging
-import json
+# import json
+import simplejson as json
 _logger = logging.getLogger(__name__)
 from odoo.http import request, Response
 
@@ -26,8 +27,8 @@ class PaymentREST(http.Controller):
         if 'application/x-www-form-urlencoded' in content_type:
             data = dict(form_data)
             json_string = form_data.get('data')
-            json_data = json.loads(json_string)
             _logger.info(f'string json: {json_string}')
+            json_data = json.loads(json_string)
             _logger.info(f'data json: {json_data}')
             
 
