@@ -52,69 +52,48 @@ class PaymentREST(http.Controller):
             # _logger.info(f'Customer Name: {customer_name}')
             # _logger.info(f'Customer Phone: {customer_phone}')
             # _logger.info(f'Customer Email: {customer_email}')
+            
+            extracted_data = {}
+            # Extraire les données
+            for key, value in form_data.items():
+                # Nettoyer la clé pour obtenir une structure de données plus simple
+                clean_key = key.replace('data[', '').replace(']', '')
+                keys = clean_key.split('[')
+                current_level = extracted_data
 
-            json_string = form_data.get('data')
-            if json_string:
-            # Create a dictionary from the form data
-                json_data = {
-                    'response_code': json_string,
-                    'response_text': form_data.get('data[response_text]'),
-                    'hash': form_data.get('data[hash]'),
-                    'invoice': {
-                        'token': form_data.get('data[invoice][token]'),
-                        'pal_is_on': form_data.get('data[invoice][pal_is_on]'),
-                        'total_amount': form_data.get('data[invoice][total_amount]'),
-                        'total_amount_without_fees': form_data.get('data[invoice][total_amount_without_fees]'),
-                        'description': form_data.get('data[invoice][description]'),
-                        'expire_date': form_data.get('data[invoice][expire_date]'),
-                    },
-                    'actions': {
-                        'cancel_url': form_data.get('data[actions][cancel_url]'),
-                        'callback_url': form_data.get('data[actions][callback_url]'),
-                        'return_url': form_data.get('data[actions][return_url]'),
-                    },
-                    'mode': form_data.get('data[mode]'),
-                    'status': form_data.get('data[status]'),
-                    'fail_reason': form_data.get('data[fail_reason]'),
-                    'customer': {
-                        'name': form_data.get('data[customer][name]'),
-                        'phone': form_data.get('data[customer][phone]'),
-                        'email': form_data.get('data[customer][email]'),
-                        'payment_method': form_data.get('data[customer][payment_method]'),
-                    },
-                    'receipt_identifier': form_data.get('data[receipt_identifier]'),
-                    'receipt_url': form_data.get('data[receipt_url]'),
-                    'provider_reference': form_data.get('data[provider_reference]'),
-                }
+                # Construire le dictionnaire imbriqué
+                for part in keys[:-1]:
+                    if part not in current_level:
+                        current_level[part] = {}
+                    current_level = current_level[part]
+                current_level[keys[-1]] = value
 
-                _logger.info(f'data json: {json_data}')
+            # Log des données extraites
+            _logger.info(f'Données extraites: {extracted_data}')
+            json_data = json.loads(extracted_data['data'])
 
-                invoice = json_data.get('invoice')
-                token = invoice['token']
-                status = json_data.get('status')
-                customer = json_data.get('customer')
-                response_code = json_data.get('response_code')
-                receipt_url = json_data.get('receipt_url')
-                payment_method = customer['payment_method']
-                customer_name = customer['name']
-                customer_phone = customer['phone']
-                customer_email = customer['email']
+            # Accéder aux données
+            response_code = json_data.get('response_code')
+            response_text = json_data.get('response_text')
+            invoice_token = json_data.get('invoice', {}).get('token')
+            customer_name = json_data.get('customer', {}).get('name')
+            receipt_url = json_data.get('receipt_url')
+            customer_email = json_data.get('customer', {}).get('email')
+            customer_phone = json_data.get('customer', {}).get('phone')
+            status = json_data.get('status')
 
-                # Now you can use these variables as needed
-                _logger.info(f'Token: {token}')
-                _logger.info(f'Status: {status}')
-                _logger.info(f'Customer: {customer}')
-                _logger.info(f'Response Code: {response_code}')
-                _logger.info(f'Receipt URL: {receipt_url}')
-                _logger.info(f'Payment Method: {payment_method}')
-                _logger.info(f'Customer Name: {customer_name}')
-                _logger.info(f'Customer Phone: {customer_phone}')
-                _logger.info(f'Customer Email: {customer_email}')
-
-                return self._make_response({'status': 'success'}, 200)
-            else:
-                return self._make_response({'status': 'failed'}, 200)
-
+            # Log des données extraites
+            _logger.info(f'Response Code: {response_code}')
+            _logger.info(f'Response Text: {response_text}')
+            _logger.info(f'Invoice Token: {invoice_token}')
+            _logger.info(f'Customer Name: {customer_name}')
+            _logger.info(f'Receipt URL: {receipt_url}')
+            _logger.info(f'Customer Email: {customer_email}')
+            _logger.info(f'Customer Phone: {customer_phone}')
+            _logger.info(f'Status: {status}')
+            
+                
+            
             return self._make_response({'status': 'success'}, 200)
             user = request.env['res.users'].sudo().browse(request.env.uid)
             if not user or user._is_public():
