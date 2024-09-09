@@ -63,15 +63,6 @@ class PaymentREST(http.Controller):
                     'invoice': {
                         'token': form_data.get('data[invoice][token]'),
                         'pal_is_on': form_data.get('data[invoice][pal_is_on]'),
-                        'items': {
-                            'item_0': {
-                                'name': form_data.get('data[invoice][items][item_0][name]'),
-                                'quantity': form_data.get('data[invoice][items][item_0][quantity]'),
-                                'unit_price': form_data.get('data[invoice][items][item_0][unit_price]'),
-                                'total_price': form_data.get('data[invoice][items][item_0][total_price]'),
-                                'description': form_data.get('data[invoice][items][item_0][description]'),
-                            },
-                        },
                         'total_amount': form_data.get('data[invoice][total_amount]'),
                         'total_amount_without_fees': form_data.get('data[invoice][total_amount_without_fees]'),
                         'description': form_data.get('data[invoice][description]'),
@@ -104,6 +95,10 @@ class PaymentREST(http.Controller):
                 customer = json_data.get('customer')
                 response_code = json_data.get('response_code')
                 receipt_url = json_data.get('receipt_url')
+                payment_method = customer['payment_method']
+                customer_name = customer['name']
+                customer_phone = customer['phone']
+                customer_email = customer['email']
 
                 # Now you can use these variables as needed
                 _logger.info(f'Token: {token}')
@@ -111,6 +106,10 @@ class PaymentREST(http.Controller):
                 _logger.info(f'Customer: {customer}')
                 _logger.info(f'Response Code: {response_code}')
                 _logger.info(f'Receipt URL: {receipt_url}')
+                _logger.info(f'Payment Method: {payment_method}')
+                _logger.info(f'Customer Name: {customer_name}')
+                _logger.info(f'Customer Phone: {customer_phone}')
+                _logger.info(f'Customer Email: {customer_email}')
 
                 return self._make_response({'status': 'success'}, 200)
             else:
