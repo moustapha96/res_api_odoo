@@ -4,7 +4,7 @@ import pdb
 import datetime
 import logging
 # import json
-import simplejson as json
+import json
 _logger = logging.getLogger(__name__)
 from odoo.http import request, Response
 
@@ -15,8 +15,8 @@ class PaymentREST(http.Controller):
     def api_get_data_send_by_paydunya(self,**kw):
 
         headers = request.httprequest.headers
-        _logger.info(f"Request headers: {headers}")
-        _logger.info(f"Request headers: {request.httprequest}")
+        # _logger.info(f"Request headers: {headers}")
+        # _logger.info(f"Request headers: {request.httprequest}")
         
 
         form_data = request.httprequest.form
@@ -25,12 +25,12 @@ class PaymentREST(http.Controller):
 
         content_type = headers.get('Content-Type', '')
         if 'application/x-www-form-urlencoded' in content_type:
-            data = dict(form_data)
+            
+            
             json_string = form_data.get('data')
             _logger.info(f'string json: {json_string}')
             json_data = json.loads(json_string)
             _logger.info(f'data json: {json_data}')
-            
 
             invoice = json_data.get('invoice')
             token = invoice['token']
@@ -38,8 +38,35 @@ class PaymentREST(http.Controller):
             customer = json_data.get('customer')
             response_code = json_data.get('response_code')
             receipt_url = json_data.get('receipt_url')
+            payment_method = customer['payment_method']
+            customer_name = customer['name']
+            customer_phone = customer['phone']
+            customer_email = customer['email']
 
-            _logger.info(f'token: {token}, status: {status}, customer: {customer}, response_code: {response_code}, receipt_url: {receipt_url}')
+            _logger.info(f'Token: {token}')
+            _logger.info(f'Status: {status}')
+            _logger.info(f'Customer: {customer}')
+            _logger.info(f'Response Code: {response_code}')
+            _logger.info(f'Receipt URL: {receipt_url}')
+            _logger.info(f'Payment Method: {payment_method}')
+            _logger.info(f'Customer Name: {customer_name}')
+            _logger.info(f'Customer Phone: {customer_phone}')
+            _logger.info(f'Customer Email: {customer_email}')
+
+            
+            # json_string = form_data.get('data')
+            # _logger.info(f'string json: {json_string}')
+            # json_data = json.loads(json_string)
+            # _logger.info(f'data json: {json_data}')
+            
+
+            # invoice = json_data.get('invoice')
+            # token = invoice['token']
+            # status = json_data.get('status')
+            # customer = json_data.get('customer')
+            # response_code = json_data.get('response_code')
+            # receipt_url = json_data.get('receipt_url')
+
             user = request.env['res.users'].sudo().browse(request.env.uid)
             if not user or user._is_public():
                 admin_user = request.env.ref('base.user_admin')
@@ -52,9 +79,9 @@ class PaymentREST(http.Controller):
                     
                     payment_details.write({
                         'url_facture': receipt_url,
-                        'customer_email': customer['email'],
-                        'customer_phone': customer['phone'],
-                        'customer_name': customer['name'],
+                        'customer_email': customer_email,
+                        'customer_phone': customer_phone,
+                        'customer_name': customer_name,
                         'payment_state': "completed",
                     })
                     return self._make_response({'status': 'success'}, 200)
@@ -104,9 +131,9 @@ class PaymentREST(http.Controller):
                 if payment_details:
                     payment_details.write({
                         'url_facture': receipt_url,
-                        'customer_email': customer['email'],
-                        'customer_phone': customer['phone'],
-                        'customer_name': customer['name'],
+                        'customer_email': customer_email,
+                        'customer_phone': customer_phone,
+                        'customer_name': customer_name,
                         'payment_state': status,
                         # 'token_status': True
                     })
