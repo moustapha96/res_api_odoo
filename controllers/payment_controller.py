@@ -27,8 +27,8 @@ class PaymentREST(http.Controller):
             data = dict(form_data)
             json_string = form_data.get('data')
             json_data = json.loads(json_string)
+            _logger.info(f'string json: {json_string}')
             _logger.info(f'data json: {json_data}')
-            _logger.info(f'data json: {json_data.get("invoice")}')
             
 
             invoice = json_data.get('invoice')
@@ -98,15 +98,18 @@ class PaymentREST(http.Controller):
                 else:
                     return self._make_response({'status': 'success'}, 200)
             else:
+                
                 payment_details = request.env['payment.details'].sudo().search([('payment_token', '=', token)], limit=1)
-                payment_details.write({
-                    'url_facture': receipt_url,
-                    'customer_email': customer['email'],
-                    'customer_phone': customer['phone'],
-                    'customer_name': customer['name'],
-                    'payment_state': status,
-                    # 'token_status': True
-                })
+                if payment_details:
+                    payment_details.write({
+                        'url_facture': receipt_url,
+                        'customer_email': customer['email'],
+                        'customer_phone': customer['phone'],
+                        'customer_name': customer['name'],
+                        'payment_state': status,
+                        # 'token_status': True
+                    })
+
                 return self._make_response({'status': 'success'}, 200)
             
         else:
