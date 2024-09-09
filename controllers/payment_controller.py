@@ -27,38 +27,10 @@ class PaymentREST(http.Controller):
         if 'application/x-www-form-urlencoded' in content_type:
             
             
-            json_string = form_data.get('data')
-            _logger.info(f'string json: {json_string}')
-            json_data = json.loads(json_string)
-            _logger.info(f'data json: {json_data}')
-
-            invoice = json_data.get('invoice')
-            token = invoice['token']
-            status = json_data.get('status')
-            customer = json_data.get('customer')
-            response_code = json_data.get('response_code')
-            receipt_url = json_data.get('receipt_url')
-            payment_method = customer['payment_method']
-            customer_name = customer['name']
-            customer_phone = customer['phone']
-            customer_email = customer['email']
-
-            _logger.info(f'Token: {token}')
-            _logger.info(f'Status: {status}')
-            _logger.info(f'Customer: {customer}')
-            _logger.info(f'Response Code: {response_code}')
-            _logger.info(f'Receipt URL: {receipt_url}')
-            _logger.info(f'Payment Method: {payment_method}')
-            _logger.info(f'Customer Name: {customer_name}')
-            _logger.info(f'Customer Phone: {customer_phone}')
-            _logger.info(f'Customer Email: {customer_email}')
-
-            
             # json_string = form_data.get('data')
             # _logger.info(f'string json: {json_string}')
             # json_data = json.loads(json_string)
             # _logger.info(f'data json: {json_data}')
-            
 
             # invoice = json_data.get('invoice')
             # token = invoice['token']
@@ -66,7 +38,85 @@ class PaymentREST(http.Controller):
             # customer = json_data.get('customer')
             # response_code = json_data.get('response_code')
             # receipt_url = json_data.get('receipt_url')
+            # payment_method = customer['payment_method']
+            # customer_name = customer['name']
+            # customer_phone = customer['phone']
+            # customer_email = customer['email']
 
+            # _logger.info(f'Token: {token}')
+            # _logger.info(f'Status: {status}')
+            # _logger.info(f'Customer: {customer}')
+            # _logger.info(f'Response Code: {response_code}')
+            # _logger.info(f'Receipt URL: {receipt_url}')
+            # _logger.info(f'Payment Method: {payment_method}')
+            # _logger.info(f'Customer Name: {customer_name}')
+            # _logger.info(f'Customer Phone: {customer_phone}')
+            # _logger.info(f'Customer Email: {customer_email}')
+
+            json_string = form_data.get('data')
+            if json_string:
+            # Create a dictionary from the form data
+                json_data = {
+                    'response_code': json_string,
+                    'response_text': form_data.get('data[response_text]'),
+                    'hash': form_data.get('data[hash]'),
+                    'invoice': {
+                        'token': form_data.get('data[invoice][token]'),
+                        'pal_is_on': form_data.get('data[invoice][pal_is_on]'),
+                        'items': {
+                            'item_0': {
+                                'name': form_data.get('data[invoice][items][item_0][name]'),
+                                'quantity': form_data.get('data[invoice][items][item_0][quantity]'),
+                                'unit_price': form_data.get('data[invoice][items][item_0][unit_price]'),
+                                'total_price': form_data.get('data[invoice][items][item_0][total_price]'),
+                                'description': form_data.get('data[invoice][items][item_0][description]'),
+                            },
+                        },
+                        'total_amount': form_data.get('data[invoice][total_amount]'),
+                        'total_amount_without_fees': form_data.get('data[invoice][total_amount_without_fees]'),
+                        'description': form_data.get('data[invoice][description]'),
+                        'expire_date': form_data.get('data[invoice][expire_date]'),
+                    },
+                    'actions': {
+                        'cancel_url': form_data.get('data[actions][cancel_url]'),
+                        'callback_url': form_data.get('data[actions][callback_url]'),
+                        'return_url': form_data.get('data[actions][return_url]'),
+                    },
+                    'mode': form_data.get('data[mode]'),
+                    'status': form_data.get('data[status]'),
+                    'fail_reason': form_data.get('data[fail_reason]'),
+                    'customer': {
+                        'name': form_data.get('data[customer][name]'),
+                        'phone': form_data.get('data[customer][phone]'),
+                        'email': form_data.get('data[customer][email]'),
+                        'payment_method': form_data.get('data[customer][payment_method]'),
+                    },
+                    'receipt_identifier': form_data.get('data[receipt_identifier]'),
+                    'receipt_url': form_data.get('data[receipt_url]'),
+                    'provider_reference': form_data.get('data[provider_reference]'),
+                }
+
+                _logger.info(f'data json: {json_data}')
+
+                invoice = json_data.get('invoice')
+                token = invoice['token']
+                status = json_data.get('status')
+                customer = json_data.get('customer')
+                response_code = json_data.get('response_code')
+                receipt_url = json_data.get('receipt_url')
+
+                # Now you can use these variables as needed
+                _logger.info(f'Token: {token}')
+                _logger.info(f'Status: {status}')
+                _logger.info(f'Customer: {customer}')
+                _logger.info(f'Response Code: {response_code}')
+                _logger.info(f'Receipt URL: {receipt_url}')
+
+                return self._make_response({'status': 'success'}, 200)
+            else:
+                return self._make_response({'status': 'failed'}, 200)
+
+            return self._make_response({'status': 'success'}, 200)
             user = request.env['res.users'].sudo().browse(request.env.uid)
             if not user or user._is_public():
                 admin_user = request.env.ref('base.user_admin')
