@@ -13,26 +13,32 @@ class PaymentREST(http.Controller):
     @http.route('/api/facture/paydunya', methods=['POST'], type='http', auth='none', cors="*",  csrf=False)
     def api_get_data_send_by_paydunya(self,**kw):
 
-        _logger.info(f"Request headers: {request.httprequest.headers}")
-        # if not request.httprequest.data:
-        #     return error_response(400, 'no_data', 'No data was provided in the request body.')
+        headers = request.httprequest.headers
+        _logger.info(f"Request headers: {headers}")
+        _logger.info(f"Request headers: {request.httprequest}")
         
-        content_type = request.httprequest.headers.get('Content-Type', '')
+
+        form_data = request.httprequest.form
+        _logger.info(f"Form data: {form_data}")
+
+
+        content_type = headers.get('Content-Type', '')
         if 'application/x-www-form-urlencoded' in content_type:
-            data = request.httprequest.form
-        
-            data = json.loads(request.httprequest.data)
-            _logger.info(f'data: {data}')
-            _logger.info(f'data token: {data.get("invoice").get("token")}')
-        
+            data = dict(form_data)
+            json_string = form_data.get('data')
+            json_data = json.loads(json_string)
+            _logger.info(f'data json: {json_data}')
+            _logger.info(f'data json: {json_data.get("invoice")}')
+            
 
-            invoice = data.get('invoice')
+            invoice = json_data.get('invoice')
             token = invoice['token']
-            status = data.get('status')
-            customer = data.get('customer')
-            response_code = data.get('response_code')
-            receipt_url = data.get('receipt_url')
+            status = json_data.get('status')
+            customer = json_data.get('customer')
+            response_code = json_data.get('response_code')
+            receipt_url = json_data.get('receipt_url')
 
+            _logger.info(f'token: {token}, status: {status}, customer: {customer}, response_code: {response_code}, receipt_url: {receipt_url}')
             user = request.env['res.users'].sudo().browse(request.env.uid)
             if not user or user._is_public():
                 admin_user = request.env.ref('base.user_admin')
@@ -49,7 +55,6 @@ class PaymentREST(http.Controller):
                         'customer_phone': customer['phone'],
                         'customer_name': customer['name'],
                         'payment_state': "completed",
-                        # 'token_status': True
                     })
                     return self._make_response({'status': 'success'}, 200)
                     # order = request.env['sale.order'].sudo().search([('id', '=',  payment_details.order_id )], limit=1)
@@ -103,8 +108,20 @@ class PaymentREST(http.Controller):
                     # 'token_status': True
                 })
                 return self._make_response({'status': 'success'}, 200)
+            
         else:
             return self._make_response({'status': 'success'}, 200)
+        
+
+
+
+
+
+
+
+
+
+
     
     @http.route('/api/commandes', methods=['POST'], type='http', cors="*", auth='none', csrf=False)
     def api_create_order(self, **kwargs):
