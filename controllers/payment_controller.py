@@ -17,7 +17,28 @@ class PaymentREST(http.Controller):
         headers = request.httprequest.headers
         form_data = request.httprequest.form
         _logger.info(f"Form data: {form_data}")
-       
+
+        data_dict = {key: value for key, value in form_data.items()}
+
+        # Informations sur la transaction
+        response_code = data_dict['data[response_code]']
+        response_text = data_dict['data[response_text]']
+        status = data_dict['data[status]']
+        total_amount = data_dict['data[invoice][total_amount]']
+
+        # Informations sur le client
+        customer_name = data_dict['data[customer][name]']
+        customer_phone = data_dict['data[customer][phone]']
+        customer_email = data_dict['data[customer][email]']
+
+        # Affichage des informations extraites
+        _logger.info(f'Status: {status}')
+        _logger.info(f'Response Code: {response_code}')
+        _logger.info(f'Response Text: {response_text}')
+        _logger.info(f'Total Amount: {total_amount}')
+        _logger.info(f'Customer Name: {customer_name}')
+        _logger.info(f'Customer Phone: {customer_phone}')
+        _logger.info(f'Customer Email: {customer_email}')
         
         # json_data = form_data['data'] # '{  }'
         # data_dict = json.loads(json_data) # {}
