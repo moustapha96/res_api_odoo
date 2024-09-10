@@ -4,10 +4,10 @@ import pdb
 import datetime
 import logging
 # import json
-import simplejson as json
+import json
 _logger = logging.getLogger(__name__)
 from odoo.http import request, Response
-import ast
+
 class PaymentREST(http.Controller):
 
 
@@ -15,41 +15,86 @@ class PaymentREST(http.Controller):
     def api_get_data_send_by_paydunya(self,**kw):
 
         headers = request.httprequest.headers
+        # _logger.info(f"Request headers: {headers}")
+        # _logger.info(f"Request headers: {request.httprequest}")
+        
+
         form_data = request.httprequest.form
         _logger.info(f"Form data: {form_data}")
-        datas =  ast.literal_eval(form_data['data'])  
-        _logger.info( datas.get('invoice') )
-        
+
 
         content_type = headers.get('Content-Type', '')
         if 'application/x-www-form-urlencoded' in content_type:
-
-            invoice = datas.get('invoice')
-            token = invoice['token']
-            status = datas.get('status')
-            customer = datas.get('customer')
-            response_code = datas.get('response_code')
-            receipt_url = datas.get('receipt_url')
-            customer_name = customer['name']
-            customer_phone = customer['phone']
-            customer_email = customer['email']
-
-            _logger.info(f'Token: {token}')
-            _logger.info(f'Status: {status}')
-            _logger.info(f'Customer: {customer}')
-            _logger.info(f'Response Code: {response_code}')
-            _logger.info(f'Receipt URL: {receipt_url}')
-            _logger.info(f'Payment Method: {customer}')
-            _logger.info(f'Customer Name: {customer_name}')
-            _logger.info(f'Customer Phone: {customer_phone}')
-            _logger.info(f'Customer Email: {customer_email}')
             
+            
+            # json_string = form_data.get('data')
+            # _logger.info(f'string json: {json_string}')
+            # json_data = json.loads(json_string)
+            # _logger.info(f'data json: {json_data}')
+
+            # invoice = json_data.get('invoice')
+            # token = invoice['token']
+            # status = json_data.get('status')
+            # customer = json_data.get('customer')
+            # response_code = json_data.get('response_code')
+            # receipt_url = json_data.get('receipt_url')
+            # payment_method = customer['payment_method']
+            # customer_name = customer['name']
+            # customer_phone = customer['phone']
+            # customer_email = customer['email']
+
+            # _logger.info(f'Token: {token}')
+            # _logger.info(f'Status: {status}')
+            # _logger.info(f'Customer: {customer}')
+            # _logger.info(f'Response Code: {response_code}')
+            # _logger.info(f'Receipt URL: {receipt_url}')
+            # _logger.info(f'Payment Method: {payment_method}')
+            # _logger.info(f'Customer Name: {customer_name}')
+            # _logger.info(f'Customer Phone: {customer_phone}')
+            # _logger.info(f'Customer Email: {customer_email}')
+            
+            extracted_data = {}
+            # Extraire les données
+            for key, value in form_data.items():
+                # Nettoyer la clé pour obtenir une structure de données plus simple
+                clean_key = key.replace('data[', '').replace(']', '')
+                keys = clean_key.split('[')
+                current_level = extracted_data
+
+                # Construire le dictionnaire imbriqué
+                for part in keys[:-1]:
+                    if part not in current_level:
+                        current_level[part] = {}
+                    current_level = current_level[part]
+                current_level[keys[-1]] = value
+
+            # Log des données extraites
+            _logger.info(f'Données extraites: {extracted_data}')
+            json_data = json.loads(extracted_data.get('data'))
+
+            # Accéder aux données
+            response_code = json_data.get('response_code')
+            response_text = json_data.get('response_text')
+            invoice_token = json_data.get('invoice', {}).get('token')
+            customer_name = json_data.get('customer', {}).get('name')
+            receipt_url = json_data.get('receipt_url')
+            customer_email = json_data.get('customer', {}).get('email')
+            customer_phone = json_data.get('customer', {}).get('phone')
+            status = json_data.get('status')
+
+            # Log des données extraites
+            _logger.info(f'Response Code: {response_code}')
+            _logger.info(f'Response Text: {response_text}')
+            _logger.info(f'Invoice Token: {invoice_token}')
+            _logger.info(f'Customer Name: {customer_name}')
+            _logger.info(f'Receipt URL: {receipt_url}')
+            _logger.info(f'Customer Email: {customer_email}')
+            _logger.info(f'Customer Phone: {customer_phone}')
+            _logger.info(f'Status: {status}')
             
                 
             
             return self._make_response({'status': 'success'}, 200)
-        else:
-            return self._make_response({'status': 'error'}, 200)
             user = request.env['res.users'].sudo().browse(request.env.uid)
             if not user or user._is_public():
                 admin_user = request.env.ref('base.user_admin')
@@ -123,7 +168,8 @@ class PaymentREST(http.Controller):
 
                 return self._make_response({'status': 'success'}, 200)
             
-        
+        else:
+            return self._make_response({'status': 'success'}, 200)
         
 
 
