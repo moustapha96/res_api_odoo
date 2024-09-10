@@ -24,25 +24,25 @@ class PaymentREST(http.Controller):
         content_type = headers.get('Content-Type', '')
         if 'application/x-www-form-urlencoded' in content_type:
 
-            invoice = datas.get('invoice')
-            token = invoice['token']
-            status = datas.get('status')
-            customer = datas.get('customer')
-            response_code = datas.get('response_code')
-            receipt_url = datas.get('receipt_url')
-            customer_name = customer['name']
-            customer_phone = customer['phone']
-            customer_email = customer['email']
+            # invoice = datas.get('invoice')
+            # token = invoice['token']
+            # status = datas.get('status')
+            # customer = datas.get('customer')
+            # response_code = datas.get('response_code')
+            # receipt_url = datas.get('receipt_url')
+            # customer_name = customer['name']
+            # customer_phone = customer['phone']
+            # customer_email = customer['email']
 
-            _logger.info(f'Token: {token}')
-            _logger.info(f'Status: {status}')
-            _logger.info(f'Customer: {customer}')
-            _logger.info(f'Response Code: {response_code}')
-            _logger.info(f'Receipt URL: {receipt_url}')
-            _logger.info(f'Payment Method: {customer}')
-            _logger.info(f'Customer Name: {customer_name}')
-            _logger.info(f'Customer Phone: {customer_phone}')
-            _logger.info(f'Customer Email: {customer_email}')
+            # _logger.info(f'Token: {token}')
+            # _logger.info(f'Status: {status}')
+            # _logger.info(f'Customer: {customer}')
+            # _logger.info(f'Response Code: {response_code}')
+            # _logger.info(f'Receipt URL: {receipt_url}')
+            # _logger.info(f'Payment Method: {customer}')
+            # _logger.info(f'Customer Name: {customer_name}')
+            # _logger.info(f'Customer Phone: {customer_phone}')
+            # _logger.info(f'Customer Email: {customer_email}')
             
             
                 
