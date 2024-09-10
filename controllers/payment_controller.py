@@ -391,6 +391,7 @@ class PaymentREST(http.Controller):
             payment_token = data.get('payment_token')
             payment_state = data.get('payment_state')
             payment_date = datetime.datetime.now()
+            url_facture = None
 
             if not all([transaction_id, amount, order_id,  partner_id]):
                 return request.make_response(
@@ -407,7 +408,8 @@ class PaymentREST(http.Controller):
                         'amount': amount,
                         'payment_date': payment_date,
                         'payment_token': payment_token,
-                        'payment_state': payment_state
+                        'payment_state': payment_state,
+                        'url_facture': url_facture
                     })
                     return request.make_response(
                         json.dumps({
@@ -422,11 +424,12 @@ class PaymentREST(http.Controller):
                             'order_type': payment_details_existe.order_type,
                             'partner_id': payment_details_existe.partner_id,
                             'payment_token': payment_details_existe.payment_token,
-                            'url_facture': payment_details_existe.url_facture,
+                            'url_facture': payment_details_existe.url_facture or None,
                             'customer_name' : payment_details_existe.customer_name,
                             'customer_email' : payment_details_existe.customer_email,
                             'customer_phone' : payment_details_existe.customer_phone,
                             'payment_state': payment_details_existe.payment_state,
+                            'datas': None,
                             'token_status': payment_details_existe.token_status}),
                         status=200,
                         headers={'Content-Type': 'application/json'}
