@@ -3,11 +3,11 @@ from .main import *
 import pdb
 import datetime
 import logging
-import json
-# import simplejson as json
+# import json
+import simplejson as json
 _logger = logging.getLogger(__name__)
 from odoo.http import request, Response
-import ast
+
 class PaymentREST(http.Controller):
 
 
