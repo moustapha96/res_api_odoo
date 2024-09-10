@@ -17,7 +17,8 @@ class PaymentREST(http.Controller):
         headers = request.httprequest.headers
         form_data = request.httprequest.form
         _logger.info(f"Form data: {form_data}")
-        datas =  ast.literal_eval(form_data['data'])  
+        # datas =  ast.literal_eval(form_data['data'])  
+        datas = json.loads(form_data['data'])
         _logger.info( datas.get('invoice') )
         
 
