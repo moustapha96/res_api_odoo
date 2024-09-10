@@ -3,8 +3,8 @@ from .main import *
 import pdb
 import datetime
 import logging
-# import json
-import simplejson as json
+import json
+# import simplejson as json
 _logger = logging.getLogger(__name__)
 from odoo.http import request, Response
 import ast
@@ -17,10 +17,15 @@ class PaymentREST(http.Controller):
         headers = request.httprequest.headers
         form_data = request.httprequest.form
         _logger.info(f"Form data: {form_data}")
-        datas =  ast.literal_eval(form_data['data'])  
-        # datas = json.loads(form_data['data'])
-        _logger.info( datas.get('invoice') )
+        # datas =  ast.literal_eval(form_data['data'])  
+        # # datas = json.loads(form_data['data'])
+        # _logger.info( datas.get('invoice') )
         
+        json_data = form_data['data']
+        data_dict = json.loads(json_data)
+        token = data_dict['invoice']['token']
+        _logger.info(f'Token: {token}')
+
         _logger.info(" appel de la fonction")
 
         content_type = headers.get('Content-Type', '')
