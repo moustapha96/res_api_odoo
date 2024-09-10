@@ -80,6 +80,7 @@ class PaymentREST(http.Controller):
                                     
                                     if order.advance_payment_status != 'paid':
                                         payment_details.write({'token_status': True})
+                                        _logger.info(f'payment order : {status }')
                                         return self._create_payment_and_confirm_order(order, partner, journal, payment_method, payment_method_line)
                                     return self._make_response({'status': 'success'}, 200)
 
@@ -104,6 +105,7 @@ class PaymentREST(http.Controller):
                                         })
                                         if account_payment:
                                             account_payment.action_post()
+                                            _logger.info(f'payment preorder : {status }')
                                         return self._make_response({'status': 'success'}, 200)
                                     return self._make_response({'status': 'success'}, 200)
                                 else:
