@@ -11,6 +11,7 @@ class PaymentDetails(models.Model):
     _name = 'payment.details'
     _description = 'Payment Details'
 
+    datas = fields.Char(string='Datas Transaction', required=True)
     transaction_id = fields.Char(string='Transaction ID', required=True)
     token_status = fields.Boolean(string='Token Status', required=True)
     url_facture = fields.Char(string='Url Facture', required=True)
@@ -72,7 +73,8 @@ class PaymentDetails(models.Model):
                 'customer_name' : payment_details.customer_name,
                 'customer_email' : payment_details.customer_email,
                 'customer_phone' : payment_details.customer_phone,
-                'token_status': payment_details.token_status
+                'token_status': payment_details.token_status,
+                'datas': payment_details.datas
             }
         return None
 
@@ -98,7 +100,8 @@ class PaymentDetails(models.Model):
                     'customer_name' : p.customer_name,
                     'customer_email' : p.customer_email,
                     'customer_phone' : p.customer_phone,
-                    'token_status': p.token_status
+                    'token_status': p.token_status,
+                    'datas': p.datas
                 })
             return payment_details
         return []
