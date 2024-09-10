@@ -21,9 +21,12 @@ class PaymentREST(http.Controller):
         datas = json.loads(form_data['data'])
         _logger.info( datas.get('invoice') )
         
+        _logger.info(" appel de la fonction")
 
         content_type = headers.get('Content-Type', '')
         if 'application/x-www-form-urlencoded' in content_type:
+
+            _logger.info(" entrer dans la fonction")
 
             invoice = datas.get('invoice')
             token = invoice['token']
