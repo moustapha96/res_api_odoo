@@ -24,7 +24,23 @@ class PaymentREST(http.Controller):
         json_data = form_data['data']
         data_dict = json.loads(json_data)
         token = data_dict['invoice']['token']
+        status = data_dict['status']
+        response_code = data_dict['response_code']
+        receipt_url = data_dict['receipt_url']
+        total_amount = data_dict['invoice']['total_amount']
+        customer_email = data_dict['customer']['email']
+        customer_phone = data_dict['customer']['phone']
+        customer_name = data_dict['customer']['name']
+
+        
         _logger.info(f'Token: {token}')
+        _logger.info(f'Status: {status}')
+        _logger.info(f'Response Code: {response_code}')
+        _logger.info(f'Receipt URL: {receipt_url}')
+        _logger.info(f'Total Amount: {total_amount}')
+        _logger.info(f'Customer Email: {customer_email}')
+        _logger.info(f'Customer Phone: {customer_phone}')
+        _logger.info(f'Customer Name: {customer_name}')
 
         _logger.info(" appel de la fonction")
 
