@@ -11,19 +11,18 @@ class PaymentDetails(models.Model):
     _name = 'payment.details'
     _description = 'Payment Details'
 
-    datas = fields.Char(string='Datas Transaction', required=True)
     transaction_id = fields.Char(string='Transaction ID', required=True)
     token_status = fields.Boolean(string='Token Status', required=True)
-    url_facture = fields.Char(string='Url Facture', required=True)
-    customer_name = fields.Char(string='Name Facture', required=True)
-    customer_email = fields.Char(string='Email Facture', required=True)
-    customer_phone = fields.Char(string='Phone Facture', required=True)
+    url_facture = fields.Char(string='Url Facture', required=False)
+    customer_name = fields.Char(string='Name Facture', required=False)
+    customer_email = fields.Char(string='Email Facture', required=False)
+    customer_phone = fields.Char(string='Phone Facture', required=False)
     amount = fields.Float(string='Amount', required=True)
-    currency = fields.Char(string='Currency', required=True)
-    payment_method = fields.Char(string='Payment Method', required=True)
+    currency = fields.Char(string='Currency', required=False)
+    payment_method = fields.Char(string='Payment Method', required=False)
     payment_token = fields.Char(string='Payment Token', required=True)
-    order_name = fields.Char(string='Order Name', required=True)
-    order_type = fields.Char(string='Order type', required=True)
+    order_name = fields.Char(string='Order Name', required=False)
+    order_type = fields.Char(string='Order type', required=False)
     payment_date = fields.Datetime(string='Payment Date', required=True)
     order_id = fields.Integer(string='Order ID', required=True)
     partner_id = fields.Integer(string='Partner ID', required=True)
@@ -73,8 +72,7 @@ class PaymentDetails(models.Model):
                 'customer_name' : payment_details.customer_name,
                 'customer_email' : payment_details.customer_email,
                 'customer_phone' : payment_details.customer_phone,
-                'token_status': payment_details.token_status,
-                'datas': payment_details.datas
+                'token_status': payment_details.token_status
             }
         return None
 
@@ -100,8 +98,7 @@ class PaymentDetails(models.Model):
                     'customer_name' : p.customer_name,
                     'customer_email' : p.customer_email,
                     'customer_phone' : p.customer_phone,
-                    'token_status': p.token_status,
-                    'datas': p.datas
+                    'token_status': p.token_status
                 })
             return payment_details
         return []

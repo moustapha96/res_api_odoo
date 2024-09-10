@@ -4,7 +4,7 @@ import pdb
 import datetime
 import logging
 # import json
-import simplejson as json
+import json
 _logger = logging.getLogger(__name__)
 from odoo.http import request, Response
 
@@ -391,7 +391,6 @@ class PaymentREST(http.Controller):
             payment_token = data.get('payment_token')
             payment_state = data.get('payment_state')
             payment_date = datetime.datetime.now()
-            url_facture = None
 
             if not all([transaction_id, amount, order_id,  partner_id]):
                 return request.make_response(
@@ -408,8 +407,7 @@ class PaymentREST(http.Controller):
                         'amount': amount,
                         'payment_date': payment_date,
                         'payment_token': payment_token,
-                        'payment_state': payment_state,
-                        'url_facture': url_facture
+                        'payment_state': payment_state
                     })
                     return request.make_response(
                         json.dumps({
@@ -424,12 +422,11 @@ class PaymentREST(http.Controller):
                             'order_type': payment_details_existe.order_type,
                             'partner_id': payment_details_existe.partner_id,
                             'payment_token': payment_details_existe.payment_token,
-                            'url_facture': payment_details_existe.url_facture or None,
+                            'url_facture': payment_details_existe.url_facture,
                             'customer_name' : payment_details_existe.customer_name,
                             'customer_email' : payment_details_existe.customer_email,
                             'customer_phone' : payment_details_existe.customer_phone,
                             'payment_state': payment_details_existe.payment_state,
-                            'datas': None,
                             'token_status': payment_details_existe.token_status}),
                         status=200,
                         headers={'Content-Type': 'application/json'}
@@ -572,8 +569,7 @@ class PaymentREST(http.Controller):
                         'customer_name' : payment_details.customer_name,
                         'customer_email' : payment_details.customer_email,
                         'customer_phone' : payment_details.customer_phone,
-                        'token_status': payment_details.token_status,
-                        'datas': payment_details.datas
+                        'token_status': payment_details.token_status
                     }),
                     status=200,
                     headers={'Content-Type': 'application/json'}
@@ -634,8 +630,7 @@ class PaymentREST(http.Controller):
                         'customer_name' : payment_details.customer_name,
                         'customer_email' : payment_details.customer_email,
                         'customer_phone' : payment_details.customer_phone,
-                        'token_status': payment_details.token_status,
-                        'datas': payment_details.datas
+                        'token_status': payment_details.token_status
                     }),
                     status=200,
                     headers={'Content-Type': 'application/json'}
@@ -684,8 +679,7 @@ class PaymentREST(http.Controller):
                             'customer_name' : payment.customer_name,
                             'customer_email' : payment.customer_email,
                             'customer_phone' : payment.customer_phone,
-                            'token_status': payment.token_status,
-                            'datas': payment.datas
+                            'token_status': payment.token_status
                         })
                     return request.make_response(
                         json.dumps(resultat),
@@ -712,8 +706,7 @@ class PaymentREST(http.Controller):
                                 'customer_name' : payment_details.customer_name,
                                 'customer_email' : payment_details.customer_email,
                                 'customer_phone' : payment_details.customer_phone,
-                                'token_status': payment_details.token_status,
-                                'datas': payment_details.datas
+                                'token_status': payment_details.token_status
                             }),
                             status=200,
                             headers={'Content-Type': 'application/json'}
@@ -756,8 +749,7 @@ class PaymentREST(http.Controller):
                             'customer_name' : payment_details.customer_name,
                             'customer_email' : payment_details.customer_email,
                             'customer_phone' : payment_details.customer_phone,
-                            'token_status': payment_details.token_status,
-                            'datas': payment_details.datas
+                            'token_status': payment_details.token_status
                         }),
                         status=200,
                         headers={'Content-Type': 'application/json'}
@@ -813,8 +805,7 @@ class PaymentREST(http.Controller):
                             'customer_name' : payment_details.customer_name,
                             'customer_email' : payment_details.customer_email,
                             'customer_phone' : payment_details.customer_phone,
-                            'token_status': payment_details.token_status,
-                            'datas': payment_details.datas
+                            'token_status': payment_details.token_status
                         }),
                         status=200,
                         headers={'Content-Type': 'application/json'}
