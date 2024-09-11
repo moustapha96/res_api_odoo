@@ -128,9 +128,25 @@ class ControllerREST(http.Controller):
             _logger.error(error_descrip)
             return error_response(400, error, error_descrip)
         
+
+        if not request.env.user or request.env.user._is_public():
+            admin_user = request.env.ref('base.user_admin')
+            request.env = request.env(user=admin_user.id)
+
+        # Vérifier si l'identifiant est un email ou un numéro de téléphone
+        if '@' in username:
+            # C'est un email
+            user = request.env['res.users'].search([('login', '=', username)], limit=1)
+        else:
+            # C'est un numéro de téléphone
+            user = request.env['res.partner'].search([('phone', '=', username)], limit=1)
+        if user:
+            user = request.env['res.users'].search([('partner_id', '=', user.id)], limit=1)
+
+        new_username = user.login if user else username
         # Login in Odoo database:
         try:
-            request.session.authenticate(db_name, username, password)
+            request.session.authenticate(db_name, new_username, password)
         except:
             # In Odoo v12 was changed the Odoo authentication exception,
             # therefore the 'invalid_database' error response was removed!

@@ -103,6 +103,8 @@ class PaymentREST(http.Controller):
                                             'sale_id': order.id,
                                             'is_reconciled': True,
                                         })
+                                        if order.state == "draft":
+                                            order.action_confirm()
                                         if account_payment:
                                             account_payment.action_post()
                                             _logger.info(f'payment preorder : {status }')
@@ -123,13 +125,6 @@ class PaymentREST(http.Controller):
             
         else:
             return self._make_response({'status': 'success', 'message': 'Invalid request'}, 200)
-
-
-
-
-
-
-
 
 
     
@@ -917,7 +912,6 @@ class PaymentREST(http.Controller):
             if order:
                 partner = order.partner_id
                 company = partner.company_id
-
                 if payment_details.token_status == False and payment_state == "completed":
                     
                     if order.type_sale == "order" :
@@ -941,7 +935,6 @@ class PaymentREST(http.Controller):
                         
                     elif order.type_sale == "preorder":
                         
-
                         journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'),( 'company_id', '=', company.id ) ], limit=1)  # type = sale id= 1 & company_id = 1  ==> journal id = 1 / si journal id = 7 : CASH
                         payment_method = request.env['account.payment.method'].sudo().search([ ( 'payment_type', '=',  'inbound' ) ], limit=1) # payement method : TYPE Inbound & id = 1
                         payment_method_line = request.env['account.payment.method.line'].sudo().search([('payment_method_id', '=', payment_method.id), ('journal_id', '=', journal.id)], limit=1)
@@ -959,6 +952,10 @@ class PaymentREST(http.Controller):
                                 'sale_id': order.id,
                                 'is_reconciled': True,
                             })
+                            if order.state == "draft":
+                                order.action_confirm()
+
+
                             payment_details.write({
                                 'token_status': True,
                                 'url_facture': url_facture,
