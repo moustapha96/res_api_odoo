@@ -734,3 +734,4 @@ else:
         from . import mailer_controller
         from . import reset_password_controller
         from . import contact_controller
+        from . import product_categorie_controller
