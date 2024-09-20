@@ -2,6 +2,8 @@
 from .main import *
 import pdb
 import datetime
+import re
+
 
 _logger = logging.getLogger(__name__)
 
@@ -49,6 +51,7 @@ class ProductCategorieControllerREST(http.Controller):
                 'id': p.id,
                 'name': p.name,
                 'display_name': p.display_name,
+                'image': image_1920_url,
                 # 'avg_cost': p.avg_cost,
                 'quantite_en_stock': p.qty_available,
                 'quantity_reception':p.incoming_qty,
@@ -148,7 +151,13 @@ class ProductCategorieControllerREST(http.Controller):
     def api__products__one_GET(self,id, **kw):
         p = request.env['product.product'].sudo().search([ ( 'id' , '=' , id ),('sale_ok', '=', True) ])
         if p:
+            
             base_url = request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+
+            url = f"{base_url}/web/image?model=product.template&id={p.product_tmpl_id.id}&field=image"
+            _logger.info(url)
+ 
+
             image_1920_url = f"{base_url}/web/image/product.product/{p.id}/image_1920"
             image_128_url = f"{base_url}/web/image/product.product/{p.id}/image_128"
             image_1024_url = f"{base_url}/web/image/product.product/{p.id}/image_1024"
@@ -157,6 +166,7 @@ class ProductCategorieControllerREST(http.Controller):
             produit_data = {
                 'id': p.id,
                 'name': p.name,
+                'image': image_1920_url,
                 # 'image_1920': image_1920_url,
                 # 'image_128' : image_128_url,
                 # 'image_1024': image_1024_url,

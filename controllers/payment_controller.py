@@ -59,9 +59,11 @@ class PaymentREST(http.Controller):
                     if response_code == "00" and status == "completed":
                         
                         payment_details = request.env['payment.details'].sudo().search([('payment_token', '=', token)], limit=1)
-                        if payment_details and payment_details.token_status == False: 
+                        if payment_details and payment_details.token_status == False:
+                            facture = f"https://paydunya.com/checkout/receipt/{token}"
+                            url_facture = facture
                             payment_details.write({
-                                'url_facture': receipt_url,
+                                'url_facture': url_facture,
                                 'customer_email': customer_email,
                                 'customer_phone': customer_phone,
                                 'customer_name': customer_name,
@@ -913,7 +915,9 @@ class PaymentREST(http.Controller):
                 partner = order.partner_id
                 company = partner.company_id
                 if payment_details.token_status == False and payment_state == "completed":
-                    
+                    facture = f"https://paydunya.com/checkout/receipt/{token}"
+                    url_facture = facture
+
                     if order.type_sale == "order" :
                         journal = request.env['account.journal'].sudo().search([('code', '=', 'CSH1'), ('company_id', '=', company.id)], limit=1)
                         payment_method = request.env['account.payment.method'].sudo().search([('payment_type', '=', 'inbound')], limit=1)
@@ -970,7 +974,6 @@ class PaymentREST(http.Controller):
                                 return self._make_response(self._order_to_dict(order), 200)
                         else:
                             return self._make_response(self._order_to_dict(order), 200)
-
                     else:
                         return self._make_response(self._order_to_dict(order), 200)
                 elif payment_details.token_status == True and payment_details.payment_state == "completed":
