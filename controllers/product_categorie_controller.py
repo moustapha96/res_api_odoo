@@ -40,18 +40,16 @@ class ProductCategorieControllerREST(http.Controller):
         products = request.env['product.product'].sudo().search([('sale_ok', '=', True)])
         product_data = []
         if products:
-            base_url = request.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        
             for p in products:
-                image_1920_url = f"{base_url}/web/image/product.product/{p.id}/image_1920"
-                image_128_url = f"{base_url}/web/image/product.product/{p.id}/image_128"
-                image_1024_url = f"{base_url}/web/image/product.product/{p.id}/image_1024"
-                image_512_url = f"{base_url}/web/image/product.product/{p.id}/image_512"
-                image_256_url = f"{base_url}/web/image/product.product/{p.id}/image_256"
                 product_data.append({
                 'id': p.id,
                 'name': p.name,
                 'display_name': p.display_name,
-                'image': image_1920_url,
+                # 'image_1': p.image_1,
+                # 'image_2': p.image_2,
+                # 'image_3': p.image_3,
+                # 'image_4': p.image_4,
                 # 'avg_cost': p.avg_cost,
                 'quantite_en_stock': p.qty_available,
                 'quantity_reception':p.incoming_qty,
@@ -63,10 +61,10 @@ class ProductCategorieControllerREST(http.Controller):
                 # 'image_1024': image_1024_url,
                 # 'image_512': image_512_url,
                 # 'image_256': image_256_url,
-                'image_1920': p.image_1920,
-                'image_128' : p.image_128,
-                'image_1024': p.image_1024,
-                'image_512': p.image_512,
+                # 'image_1920': p.image_1920,
+                # 'image_128' : p.image_128,
+                # 'image_1024': p.image_1024,
+                # 'image_512': p.image_512,
                 'image_256': p.image_256,
                 'categ_id': p.categ_id.name,
                 'type': p.type,
@@ -114,10 +112,10 @@ class ProductCategorieControllerREST(http.Controller):
                 'quanitty_virtuelle_disponible': p.free_qty,
                 'quanitty_commande': p.outgoing_qty,
                 'quanitty_prevu': p.virtual_available,
-                'image_1920': p.image_1920,
-                'image_128' : p.image_128,
-                'image_1024': p.image_1024,
-                'image_512': p.image_512,
+                # 'image_1920': p.image_1920,
+                # 'image_128' : p.image_128,
+                # 'image_1024': p.image_1024,
+                # 'image_512': p.image_512,
                 'image_256': p.image_256,
                 'categ_id': p.categ_id.name,
                 'type': p.type,
@@ -156,27 +154,19 @@ class ProductCategorieControllerREST(http.Controller):
 
             url = f"{base_url}/web/image?model=product.template&id={p.product_tmpl_id.id}&field=image"
             _logger.info(url)
- 
 
-            image_1920_url = f"{base_url}/web/image/product.product/{p.id}/image_1920"
-            image_128_url = f"{base_url}/web/image/product.product/{p.id}/image_128"
-            image_1024_url = f"{base_url}/web/image/product.product/{p.id}/image_1024"
-            image_512_url = f"{base_url}/web/image/product.product/{p.id}/image_512"
-            image_256_url = f"{base_url}/web/image/product.product/{p.id}/image_256"
             produit_data = {
                 'id': p.id,
                 'name': p.name,
-                'image': image_1920_url,
-                # 'image_1920': image_1920_url,
-                # 'image_128' : image_128_url,
-                # 'image_1024': image_1024_url,
-                # 'image_512': image_512_url,
-                # 'image_256': image_256_url,
-                'image_1920': p.image_1920,
-                'image_128' : p.image_128,
-                'image_1024': p.image_1024,
+                'image_1': p.image_1,
+                'image_2': p.image_2,
+                'image_3': p.image_3,
+                'image_4': p.image_4,
+                # 'image_1920': p.image_1920,
+                # 'image_128' : p.image_128,
+                # 'image_1024': p.image_1024,
                 'image_512': p.image_512,
-                'image_256': p.image_256,
+                # 'image_256': p.image_256,
                 'categ_id': p.categ_id.name,
                 'type': p.type,
                 'description': p.description,
@@ -220,13 +210,7 @@ class ProductCategorieControllerREST(http.Controller):
         if products:
             for p in products:
 
-                image_1920_url = f"{base_url}/web/image/product.product/{p.id}/image_1920"
-                image_128_url = f"{base_url}/web/image/product.product/{p.id}/image_128"
-                image_1024_url = f"{base_url}/web/image/product.product/{p.id}/image_1024"
-                image_512_url = f"{base_url}/web/image/product.product/{p.id}/image_512"
-                image_256_url = f"{base_url}/web/image/product.product/{p.id}/image_256"
-                _logger.info(image_1920_url)
-                _logger.info(image_128_url)
+               
                 
                 product_data.append({
                 'id': p.id,
@@ -238,15 +222,10 @@ class ProductCategorieControllerREST(http.Controller):
                 'quanitty_virtuelle_disponible': p.free_qty,
                 'quanitty_commande': p.outgoing_qty,
                 'quanitty_prevu': p.virtual_available,
-                # 'image_1920': image_1920_url,
-                # 'image_128' : image_128_url,
-                # 'image_1024': image_1024_url,
-                # 'image_512': image_512_url,
-                # 'image_256': image_256_url,
-                'image_1920': p.image_1920,
-                'image_128' : p.image_128,
-                'image_1024': p.image_1024,
-                'image_512': p.image_512,
+                # 'image_1920': p.image_1920,
+                # 'image_128' : p.image_128,
+                # 'image_1024': p.image_1024,
+                # 'image_512': p.image_512,
                 'image_256': p.image_256,
                 'categ_id': p.categ_id.name,
                 'type': p.type,
