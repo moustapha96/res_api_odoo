@@ -29,8 +29,9 @@ class SaleOrderMail(models.Model):
         create_account_section = ""
         if not partner.password:
             # Générer le lien pour créer un compte
-            create_account_link = f"https://ccbme.sn/mail={partner.email}?create-compte"
+            # create_account_link = f"https://ccbme.sn/mail={partner.email}?create-compte"
             # create_account_link = f"http://localhost:5173/create-compte?mail={partner.email}"
+            create_account_link = f"https://ccbme.sn/create-compte?mail={partner.email}"
             create_account_section = f'''
                 <tr>
                     <td align="center" style="min-width: 590px; padding-top: 20px;">
