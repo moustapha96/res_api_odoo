@@ -13,5 +13,6 @@ from . import account_payment_preorder
 from . import sale_order_account_move
 from . import sale
 from . import product_template
+from . import partner
 # from . import sale_preorder_account_move
 
