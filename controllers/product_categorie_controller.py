@@ -287,6 +287,7 @@ class ProductCategorieControllerREST(http.Controller):
                 'sale_ok': p.sale_ok,
                 'standard_price': p.standard_price,
                 'active': p.active,
+                'purchase_ok': p.product_tmpl_id.purchase_ok,
                 'en_promo' : p.product_tmpl_id.en_promo,
                 'is_preorder': p.product_tmpl_id.is_preorder,
                 'preorder_price': p.product_tmpl_id.preorder_price,
