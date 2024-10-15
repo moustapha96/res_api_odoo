@@ -3,7 +3,7 @@
     'name': 'Odoo REST API vps',
     'version': '16.0.1.14.8',
     'category': 'Extra Tools',
-    'author': "AVS'",
+    'author': "CCBM'Tech",
     'support': 'avs3.help@gmail.com',
     'license': 'OPL-1',
     'website': 'https://app.swaggerhub.com/apis-docs/avs3/odoo_rest_api/1',
